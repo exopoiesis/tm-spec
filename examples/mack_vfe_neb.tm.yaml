@@ -1,0 +1,156 @@
+# Pilot TM-Spec artefact: mackinawite V_Fe + 2·H_int NEB
+# Real session: s133 (2026-05-04). Cost: $47.30. PASS, paper-quotable.
+# Source: knowledge/handoffs/SESSION_HANDOFF_2026-05-04_s133.md
+#         + S133_LESSONS.md
+# Bind: infra/gpu_scripts/neb_canonical_mack_136at_qe_VFe.py
+# Status: [DRAFT v0.1 — numbers from session log, not recomputed]
+
+spec: tm-spec/0.1
+kind: NEBCalculation
+id: tm.mack.vfe.hint.neb.2026-05-04
+schema_url: https://exopoiesis.github.io/tm-spec/0.1.json   # [HYPOTHESIS] published
+
+# ── 1. STRUCTURE ─────────────────────────────────────────
+structure:
+  formula: Fe35S36H2            # 3×3×2 mack: 36 Fe + 36 S, minus 1 V_Fe, plus 2 H_int = 73 atoms
+  prototype: AB_tP4_129_a_c     # AFLOW: mackinawite tetragonal P4/nmm
+  space_group: { number: 129, symbol: P4/nmm }
+  cell:
+    a: 3.674  Å                  # primitive (matches real script build_mackinawite)
+    c: 5.033  Å
+    gamma: 90 deg
+  wyckoff:
+    Fe@2a: [0.00, 0.00, 0.00000]
+    S@2c:  [0.00, 0.50, 0.26020]
+  supercell: [3, 3, 2]
+  pbc: [true, true, true]
+  ref: structures/mack_3x3x2_pristine.extxyz   # 72-atom pristine reference
+
+# ── 2. DEFECTS (Kröger-Vink) ─────────────────────────────
+defects:
+  reactions:
+    - "Fe_Fe^× → V_Fe''  + Fe(removed)"
+    - "nil    → 2 H_i^• + 2 e'"
+  charge_balance: |
+    V_Fe'' + 2·H_i^•  →  neutral
+  population:
+    V_Fe:  { count: 1, conc: 1/144 }
+    H_int: { count: 2, conc: 2/144, site: tetrahedral_cavity }
+
+# ── 3. MAGNETIC STATE ────────────────────────────────────
+magnetic:
+  state: AFM-G
+  collinear: true
+  propagation_vector: [0, 0, 0]
+  magmoms_uB:
+    Fe[top_layer]:    +3.5
+    Fe[bottom_layer]: -3.5
+  surrogate_warning: "PBE AFM-G as PM/itinerant proxy at 363 K (mackinawite is PM at 298 K experimentally; see knowledge/MAGNETIC_PREFILTER.md)"
+
+# ── 4. ENVIRONMENT (PHREEQC-style) ───────────────────────
+environment:
+  phase: bulk_solid_with_interstitial_H
+  T: 363.15 K
+  P: 100 bar
+  pH: 6.0
+  redox: { Eh: -0.40 V_SHE, pe: -6.8 }
+  composition_molal:
+    Fe(2): 1.0e-3
+    S(-2): 5.0e-4
+    Na: 0.5
+    Cl: 0.5
+  database: phreeqc/llnl.dat
+  saturation_targets:
+    mackinawite: equilibrium
+
+# ── 5. REACTION NETWORK (Antimony-flavoured) ─────────────
+reactions:
+  - id: R1
+    label: H-hop_VFe-mediated
+    rule:  "H_i^•(site_A) + V_Fe''(neighbor) → H_i^•(site_B) + V_Fe''(shifted)"
+    rate:  "k1 * θ_H_at_A * θ_VFe_neighbor"
+    params:
+      k1: { value: null, units: s^-1, source: this_calc }   # not yet computed
+    Ea_eV: 0.043   # see results.Ea_forward_eV
+
+# ── 6. CALCULATION (NOMAD-like, code-agnostic) ───────────
+calculation:
+  method: DFT
+  level:
+    xc: PBE+D3(BJ)
+    basis: { kind: plane_waves, cutoff_Ry: 60, rho_cutoff_Ry: 240 }   # script default
+    pseudopotential: ONCV-SR PBE Pseudo Dojo nc-sr-04
+    smearing: { kind: gaussian, width_Ry: 0.005 }                       # mack VFe odd electrons
+    # NOMAD/LibXC interop (D-03)
+    xc_libxc: [GGA_X_PBE, GGA_C_PBE]
+    vdw: D3-BJ
+    spin: none                                                            # nspin=1 (D-20 Q-115)
+    # hubbard: omitted — U=0 mainstream per Q115_NOMAD_BENCHMARKS.md (D-20)
+  k_points: { mesh: [2, 2, 2], shift: [0, 0, 0] }   # 3×3×2 supercell, ~6×6×4 effective
+  convergence:
+    scf_Ry:        1.0e-8
+    fmax_eV_per_A: 0.05
+  code:
+    name: QuantumESPRESSO
+    version: 7.3.1
+    image: infra-qe-gpu:cc80
+    mpirun: "mpirun --allow-run-as-root --bind-to none -np 1 pw.x"
+    npool: 4
+
+# ── 7. WORKFLOW (NEB) ────────────────────────────────────
+workflow:
+  kind: NEB
+  endpoints:
+    A: { ref: artifacts/endA.extxyz, E_eV: -1234.567, fmax: 0.039 }
+    B: { ref: artifacts/endB.extxyz, E_eV: -1234.530, fmax: 0.041 }
+  stage: production                           # full NEB run, not smoke
+  n_images: 9                                  # script default
+  optimizer: FIRE                              # NEB main path; endpoints relaxed via BFGS earlier
+  fmax_eV_per_A: 0.05
+  k_spring_eV_per_A2: 0.3                       # script default
+  reuse_relaxed: true
+  prewrap: idpp                              # Q-115 erratum #5: MANDATORY
+  paired_script: infra/gpu_scripts/neb_canonical_mack_72at_qe_VFe.py
+
+# ── 8. RESULTS ───────────────────────────────────────────
+results:
+  Ea_forward_eV:   { value: 0.043, ci95: [0.030, 0.060] }
+  Ea_reverse_eV:   0.020
+  ΔE_rxn_eV:       0.023
+  attempt_freq_Hz: 1.2e+13   # YAML 1.1 requires explicit sign in exponent
+  rate_at_T_per_s: 4.5e+10
+  status: PASS
+  paper_quotable: true
+  validated_by: [chemist@opus, physicist@opus]
+  notes: |
+    Overnight DFT NEB SUCCESS, 7 /loop wakeups (s133).
+    Initial smoke had 28 eV bug, fixed → 0.164 → 0.043 eV after full NEB.
+
+# ── 9. SANITY GATES ──────────────────────────────────────
+sanity:
+  - { id: G01_FeS_bond,           rule: "min(Fe–S) > 2.00 Å",                            observed: 2.27,                         pass: true }
+  - { id: G02_AFM_not_collapsed,  rule: "|Δμ_Fe| < 0.5 μB",                                observed: 0.02,                         pass: true }
+  - { id: G03_endpoints_distinct, rule: "ΔR_H > 0.5 Å AND Δnearest_Fe identity",           observed: "ΔR=1.83 Å + identity flip",  pass: true }
+  - { id: G04_fmax_endpoints,     rule: "fmax(A,B) ≤ fmax_target",                          observed: [0.039, 0.041],               pass: true }
+  - { id: G05_scf_converged,      rule: "all images SCF OK",                                pass: true }
+  - { id: G06_ascii_safe,         rule: "no em-dash in script (Vast.ai ASCII)",             pass: true }
+  - { id: G07_singleton_lock,     rule: "lockfile present, no race",                        pass: true }
+  - { id: G08_idpp_prewrap,       rule: "Q-115 erratum #5: idpp prewrap applied",           pass: true }
+
+# ── 10. PROVENANCE ───────────────────────────────────────
+provenance:
+  date: 2026-05-04
+  author: igor@exopoiesis.space
+  parents:
+    - tm.mack.vfe.hint.smoke@2026-05-03
+    - Q-115@2026-04-28
+  decisions: [DECISION-077, DECISION-080]
+  literature: [Vaughan1971, Wang2025_pyrite, Qiu2025_neb]
+  compute:
+    host: vast-W3
+    gpu: 2×Blackwell
+    cost_usd: 47.30
+    walltime_h: 18.4
+  hash:
+    inputs:  sha256:placeholder_to_be_computed
+    outputs: sha256:placeholder_to_be_computed

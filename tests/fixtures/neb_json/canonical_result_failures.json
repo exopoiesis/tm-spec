@@ -1,0 +1,11 @@
+{
+  "_comment": "Same shape as canonical_result.json but with values that fail every gate.",
+  "endA_fmax": 0.30,
+  "endB_fmax": 0.40,
+  "dE_endpoints_eV": 0.05,
+  "endpoints_symmetric": false,
+  "idpp_prewrap_n_unwrapped": 0,
+  "d_H_nearest_endA": 1.05,
+  "d_H_nearest_endB": 1.10,
+  "relax_pristine_converged": false
+}

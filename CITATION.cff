@@ -1,0 +1,46 @@
+cff-version: 1.2.0
+message: "If you use TM-Spec in academic work, please cite it using the metadata below."
+title: "TM-Spec: a declarative YAML metalanguage for reproducible atomistic calculations"
+abstract: >
+  TM-Spec (Third Matter Specification) is a YAML/JSONL metalanguage and reference
+  toolchain for describing structures, defects, magnetic state, environment,
+  reaction networks, DFT/MLIP calculations, workflows, sanity gates, and
+  provenance of atomistic simulations in a single human-readable, schema-validated
+  document. It is designed for paper Supporting Information, ephemeral cloud
+  compute, and cross-code reproducibility (Quantum ESPRESSO, CP2K, ABACUS, GPAW,
+  MACE, CHGNet).
+type: software
+authors:
+  - family-names: "Morozov"
+    given-names: "Igor"
+    email: "igor@exopoiesis.space"
+    affiliation: "Exopoiesis (independent research)"
+version: "0.1.0"
+date-released: "2026-05-10"
+license: MIT
+license-url: "https://github.com/exopoiesis/tm-spec/blob/main/LICENSE"
+repository-code: "https://github.com/exopoiesis/tm-spec"
+url: "https://exopoiesis.github.io/tm-spec/"
+keywords:
+  - DFT
+  - molecular dynamics
+  - machine-learning interatomic potentials
+  - NEB
+  - umbrella sampling
+  - metadynamics
+  - Fe-S minerals
+  - reproducibility
+  - paper SI
+  - NOMAD
+  - YAML
+  - JSON Schema
+references:
+  - type: software
+    title: "NOMAD (Novel Materials Discovery)"
+    url: "https://nomad-lab.eu"
+  - type: software
+    title: "OPTIMADE"
+    url: "https://www.optimade.org"
+  - type: software
+    title: "Citation File Format"
+    url: "https://citation-file-format.github.io"

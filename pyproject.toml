@@ -1,0 +1,88 @@
+[build-system]
+requires      = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name            = "tm-spec"
+version         = "0.1.0"
+description     = "Third Matter Specification — declarative YAML metalanguage and toolchain for DFT/MLIP/MD calculations with sanity gates."
+readme          = "README.md"
+requires-python = ">=3.10"
+license         = { file = "LICENSE" }
+authors         = [{ name = "Igor Morozov", email = "igor@exopoiesis.space" }]
+keywords        = [
+    "DFT", "molecular dynamics", "MLIP", "NEB", "umbrella sampling",
+    "metadynamics", "reproducibility", "paper SI", "NOMAD", "YAML",
+    "JSON Schema", "Fe-S minerals",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dependencies = [
+    "pyyaml>=6.0",
+    "jsonschema>=4.20",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.5",
+]
+
+[project.urls]
+Homepage      = "https://exopoiesis.github.io/tm-spec/"
+Repository    = "https://github.com/exopoiesis/tm-spec"
+Issues        = "https://github.com/exopoiesis/tm-spec/issues"
+Changelog     = "https://github.com/exopoiesis/tm-spec/blob/main/CHANGELOG.md"
+Specification = "https://github.com/exopoiesis/tm-spec/blob/main/SPECIFICATION.md"
+
+[project.scripts]
+tm-spec = "tm_spec.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+tm_spec = ["schemas/*.json"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+filterwarnings = ["error::DeprecationWarning"]
+
+[tool.ruff]
+line-length    = 100
+target-version = "py310"
+src            = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",      # pycodestyle / pyflakes
+    "I",                # isort
+    "B",                # bugbear
+    "UP",               # pyupgrade
+    "SIM",              # simplify
+    "RUF",              # ruff-specific
+]
+ignore = [
+    "E501",             # line-length: enforced by formatter only
+    "B008",             # function-call defaults (typer/argparse pattern)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*"      = ["B011"]      # pytest assert patterns
+"src/tm_spec/extract.py" = ["UP006", "UP007"]  # ast helpers preserve runtime types

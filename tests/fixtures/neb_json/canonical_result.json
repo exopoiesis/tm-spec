@@ -1,0 +1,11 @@
+{
+  "_comment": "Synthetic canonical-NEB result fixture. Drives test_sanity_fill.py (G03/G04/G05/G08/G09).",
+  "endA_fmax": 0.027,
+  "endB_fmax": 0.026,
+  "dE_endpoints_eV": 0.0002,
+  "endpoints_symmetric": true,
+  "idpp_prewrap_n_unwrapped": 3,
+  "d_H_nearest_endA": 1.05,
+  "d_H_nearest_endB": 2.88,
+  "relax_pristine_converged": true
+}

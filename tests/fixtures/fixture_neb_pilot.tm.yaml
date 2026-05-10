@@ -1,0 +1,58 @@
+# Synthetic pilot for the test suite — paired with tests/fixtures/scripts/fixture_neb_qe.py.
+# Values match what the AST extractor should produce (cutoff 60, k-mesh [2,2,2], n=7).
+# Used by test_lint.py to verify that pilot ↔ paired-script lint succeeds when in sync,
+# and fails when drifted (see fixture_neb_pilot_drift.tm.yaml).
+
+spec: tm-spec/0.1
+kind: NEBCalculation
+id:   tm.fix.neb.synthetic.2026-01-01
+
+structure:
+  formula:    Fe32S64
+  prototype:  AB2_cP12_205_a_c
+  space_group: { number: 205, symbol: Pa-3 }
+  supercell:  [2, 2, 2]
+  pbc:        [true, true, true]
+
+magnetic:
+  state: NM
+  collinear: true
+
+calculation:
+  method: DFT
+  level:
+    xc:    PBE
+    basis: { kind: plane_waves, cutoff_Ry: 60, rho_cutoff_Ry: 240 }
+    smearing: { kind: gaussian, width_Ry: 0.005 }
+    spin:  none
+  k_points:    { mesh: [2, 2, 2] }
+  convergence: { scf_Ry: 1.0e-8, fmax_eV_per_A: 0.05 }
+  code: { name: QuantumESPRESSO, version: 7.3.1 }
+
+workflow:
+  kind:               NEB
+  stage:              production
+  endpoints:
+    A: { ref: A.extxyz, E_eV: -100.0, fmax: 0.04 }
+    B: { ref: B.extxyz, E_eV: -100.0, fmax: 0.04 }
+  n_images:           7
+  optimizer:          FIRE
+  k_spring_eV_per_A2: 0.10
+  fmax_eV_per_A:      0.05
+  prewrap:            idpp
+  paired_script:      tests/fixtures/scripts/fixture_neb_qe.py
+
+results:
+  status:         PASS
+  paper_quotable: false
+
+sanity:
+  - { id: G06_ascii_safe, rule: "no em-dash", pass: true }
+
+provenance:
+  date:    2026-01-01
+  author:  test@example.com
+  compute: { host: ci, cost_usd: 0.0 }
+  hash:
+    inputs:  sha256:placeholder_fixture_pilot
+    outputs: sha256:placeholder_fixture_pilot
