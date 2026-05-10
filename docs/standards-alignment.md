@@ -2,7 +2,7 @@
 
 > Date: 2026-05-09. Source: web research via WebSearch +
 > WebFetch (see **Sources** section at the end). Goal — align field names,
-> enum values, and required/optional status of TM-Spec v0.1 with mature
+> enum values, and required/optional status of TM-Spec v0.2 with mature
 > domain standards (2025-2026) so that downstream NOMAD upload /
 > OPTIMADE query / QCSchema interop work without ad-hoc mapping.
 

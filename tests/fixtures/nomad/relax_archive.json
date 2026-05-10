@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "entry_id": "relax_demo_0001",
+    "upload_id": "upload_relax_demo",
+    "entry_create_time": "2026-05-10T10:00:00+00:00"
+  },
+  "workflow2": {
+    "name": "GeometryOptimization",
+    "geometry_optimization": {
+      "type": "BFGS",
+      "convergence_tolerance_force_maximum": 8.01088317e-11,
+      "optimization_steps_maximum": 120,
+      "is_converged_geometry": true
+    }
+  },
+  "results": {
+    "material": {
+      "chemical_formula_descriptive": "Si2",
+      "chemical_formula_reduced": "Si",
+      "chemical_formula_anonymous": "A",
+      "symmetry": {
+        "space_group_number": 227,
+        "space_group_symbol": "Fd-3m",
+        "prototype_label_aflow": "A_cF8_227_a"
+      }
+    },
+    "method": {
+      "method_name": "DFT",
+      "simulation": {
+        "program_name": "VASP",
+        "program_version": "6.4.2",
+        "dft": {
+          "xc_functional_type": "GGA",
+          "xc_functional_names": ["GGA_X_PBE", "GGA_C_PBE"],
+          "basis_set_type": "plane waves",
+          "spin_polarized": false
+        }
+      }
+    }
+  },
+  "run": [
+    {
+      "program": {
+        "name": "VASP",
+        "version": "6.4.2"
+      },
+      "calculation": [
+        {
+          "energy": {
+            "total": {
+              "value": -1.2817413072e-18
+            }
+          },
+          "scf_iteration": [
+            { "energy_total": -1.28e-18 },
+            { "energy_total": -1.2817413072e-18 }
+          ]
+        }
+      ]
+    }
+  ]
+}

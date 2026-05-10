@@ -1,10 +1,10 @@
 """TM-Spec validator — JSONSchema 2020-12 + TM-Spec specific rules.
 
 Schema location: bundled inside the package at
-``src/tm_spec/schemas/0.1.json`` and loaded via
+``src/tm_spec/schemas/<version>.json`` and loaded via
 ``importlib.resources``. The same file is mirrored at the repository
-root as ``schemas/0.1.json``; ``test_schema_self.py`` keeps the
-two in sync.
+root as ``schemas/<version>.json`` and at ``docs/<version>.json`` for
+GitHub Pages; ``test_schema_self.py`` keeps the copies in sync.
 
 Rules enforced beyond the schema (per ``docs/design-decisions.md``):
     D-14 — ``results.paper_quotable`` MUST be a JSON boolean.
@@ -30,21 +30,41 @@ from typing import Any
 import yaml
 from jsonschema import Draft202012Validator
 
-SPEC_VERSION = "0.1"
+SPEC_VERSION = "0.2"
+SUPPORTED_VERSIONS = ("0.1", "0.2")
 SCHEMA_FILENAME = f"{SPEC_VERSION}.json"
 
 
-def schema_path() -> Path:
+def schema_path(version: str | None = None) -> Path:
     """Return absolute filesystem path to the bundled schema.
 
     Uses ``importlib.resources.files`` so it works from an installed wheel
     (``pip install tm-spec``) as well as from a source checkout.
+
+    Pass ``version='0.1'`` to load a legacy schema for backwards-compat docs.
     """
-    return Path(str(resources.files("tm_spec").joinpath("schemas", SCHEMA_FILENAME)))
+    v = version or SPEC_VERSION
+    if v not in SUPPORTED_VERSIONS:
+        raise ValueError(f"unsupported spec version {v!r}; supported: {SUPPORTED_VERSIONS}")
+    return Path(str(resources.files("tm_spec").joinpath("schemas", f"{v}.json")))
 
 
-def load_schema() -> dict[str, Any]:
-    return json.loads(schema_path().read_text(encoding="utf-8"))
+def load_schema(version: str | None = None) -> dict[str, Any]:
+    return json.loads(schema_path(version).read_text(encoding="utf-8"))
+
+
+def _doc_spec_version(doc: dict[str, Any]) -> str:
+    """Extract the ``X.Y`` version from a doc's ``spec: tm-spec/X.Y`` field.
+
+    Falls back to current SPEC_VERSION if the field is absent or malformed
+    (the schema validator will then surface the missing-field error).
+    """
+    spec = (doc or {}).get("spec") if isinstance(doc, dict) else None
+    if isinstance(spec, str) and spec.startswith("tm-spec/"):
+        v = spec[len("tm-spec/"):]
+        if v in SUPPORTED_VERSIONS:
+            return v
+    return SPEC_VERSION
 
 
 def _normalize(obj: Any) -> Any:
@@ -169,9 +189,13 @@ def validate_doc(
 
     ``schema_errors`` is a list of ``(json_pointer, message)``.
     ``rule_issues`` is a list of ``(level, message)``.
+
+    When ``schema`` is omitted, the schema is selected from the doc's
+    ``spec`` field (e.g. ``tm-spec/0.1`` → bundled 0.1.json). This lets
+    legacy artefacts validate against the version they were authored for.
     """
     if schema is None:
-        schema = load_schema()
+        schema = load_schema(_doc_spec_version(doc))
     validator = Draft202012Validator(schema)
     schema_errs = [
         (_format_path(err.absolute_path), err.message)

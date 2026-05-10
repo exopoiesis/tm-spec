@@ -22,6 +22,8 @@ from tm_spec import validate_doc
         "w2_metad.tm.yaml",
         "w1_grotthuss_aimd.tm.yaml",
         "w2_mlip_benchmark.tm.yaml",
+        "nomad_pyrite_singlepoint.tm.yaml",
+        "nomad_relax_example.tm.yaml",
     ],
 )
 def test_example_passes_schema(examples_dir: Path, name: str, load_yaml, schema) -> None:

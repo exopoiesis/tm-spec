@@ -43,7 +43,9 @@ def test_kind_enum_complete(schema: dict) -> None:
     for required in (
         "Structure", "Defects", "Magnetic", "Environment", "Reaction",
         "NEBCalculation", "USCalculation", "MetaDynCalculation",
-        "MDCalculation", "MLIPBenchmark", "SanityReport", "Provenance",
+        "MDCalculation", "MLIPBenchmark",
+        "SinglePointCalculation", "RelaxCalculation",  # v0.2 (D-23/D-24)
+        "SanityReport", "Provenance",
     ):
         assert required in kinds, f"Missing kind '{required}' in schema enum"
 

@@ -8,6 +8,9 @@ Examples::
     tm-spec lint examples/pyr_smoke.tm.yaml
     tm-spec sanity-fill in.tm.yaml --json result.json --xyz relaxed.xyz --out filled.tm.yaml
     tm-spec export-nomad examples/*.tm.yaml --out bundle.zip
+    tm-spec import-nomad <entry_id> --out my_corpus/<id>.tm.yaml
+    tm-spec import-nomad-batch --query '{"results.method.method_name":"DFT"}' \
+        --limit 25 --out-dir my_corpus/
     tm-spec version
 """
 from __future__ import annotations
@@ -17,11 +20,13 @@ import sys
 from . import __version__
 
 SUBCOMMANDS = {
-    "validate":     "tm_spec.validator:main",
-    "extract":      "tm_spec.extract:main",
-    "lint":         "tm_spec.lint:main",
-    "sanity-fill":  "tm_spec.sanity_fill:main",
-    "export-nomad": "tm_spec.exporters.nomad:main",
+    "validate":           "tm_spec.validator:main",
+    "extract":            "tm_spec.extract:main",
+    "lint":               "tm_spec.lint:main",
+    "sanity-fill":        "tm_spec.sanity_fill:main",
+    "export-nomad":       "tm_spec.exporters.nomad:main",
+    "import-nomad":       "tm_spec.importers.nomad:main",
+    "import-nomad-batch": "tm_spec.importers.nomad:main_batch",
 }
 
 

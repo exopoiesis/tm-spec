@@ -2,16 +2,16 @@
 # Real session: s136 (DONE 2026-05-06). MACE-MP-0 + CHGNet vs CP2K WT-MetaD reference.
 # Source: paper/SI/SI_w2_us_pmf_2026-05-06.md
 #         + handoffs/SESSION_HANDOFF_2026-05-06_s136.md
-# Status: [DRAFT v0.1 — DONE]
+# Status: [DRAFT v0.2 — DONE]
 #
 # *** NEW kind: MLIPBenchmark ***
 # Cross-method comparison framework. Distinct from USCalculation (which describes
 # a SINGLE run of one MLIP) — this describes the COMPARISON across backends + DFT.
 
-spec: tm-spec/0.1
+spec: tm-spec/0.2
 kind: MLIPBenchmark
 id: tm.mack_3x3x1.h_proton.mlip_bench_us.2026-05-06
-schema_url: https://exopoiesis.github.io/tm-spec/0.1.json
+schema_url: https://exopoiesis.github.io/tm-spec/0.2.json
 
 # ── 1. STRUCTURE (same hybrid system as w2_us_pmf) ───────
 structure:

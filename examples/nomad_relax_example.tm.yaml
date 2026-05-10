@@ -1,0 +1,70 @@
+# TM-Spec pilot #8: NOMAD-imported geometry optimisation.
+# Source fixture mirrors tm_spec.importers.nomad.archive_to_tm_spec output.
+
+spec: tm-spec/0.2
+kind: RelaxCalculation
+id: tm.nomad.relax_demo_0001.2026-05-10
+schema_url: https://exopoiesis.github.io/tm-spec/0.2.json
+
+structure:
+  formula: Si2
+  chemical_formula_descriptive: Si2
+  chemical_formula_reduced: Si
+  chemical_formula_anonymous: A
+  space_group: { number: 227, symbol: Fd-3m }
+  prototype: A_cF8_227_a
+  pbc: [true, true, true]
+
+magnetic:
+  state: NM
+  collinear: true
+
+calculation:
+  method: DFT
+  level:
+    xc: GGA
+    xc_libxc: [GGA_X_PBE, GGA_C_PBE]
+    basis: { kind: plane_waves }
+    spin: none
+  code: { name: VASP, version: "6.4.2" }
+
+relax_protocol:
+  optimizer: BFGS
+  fmax_eV_per_A: 0.05
+  max_steps: 120
+
+results:
+  status: PRELIMINARY
+  paper_quotable: false
+  final_energy_eV: -8.0
+  converged: true
+  notes: "Imported from NOMAD; rerun project sanity gates before quoting."
+
+sanity:
+  - id: G05_scf_converged
+    rule: "NOMAD parser reports at least one converged SCF step"
+    observed: true
+    pass: true
+  - id: G06_ascii_safe
+    rule: "ASCII-only doc body"
+    pass: "skip"
+
+provenance:
+  date: 2026-05-10
+  author: import@nomad
+  import_source:
+    archive: nomad
+    entry_id: relax_demo_0001
+    upload_id: upload_relax_demo
+    url: https://nomad-lab.eu/prod/v1/gui/entry/id/relax_demo_0001
+    imported_at: 2026-05-10T10:00:00+00:00
+    importer: tm-spec import-nomad@0.2.0
+    raw_keys:
+      - results.material
+      - results.method.simulation.dft
+      - results.properties.energies.energy_total
+      - results.properties.electronic.band_gap
+      - metadata.entry_id
+      - metadata.upload_id
+  compute: { host: nomad-archive, cost_usd: 0.0 }
+

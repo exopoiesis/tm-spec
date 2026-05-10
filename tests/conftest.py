@@ -91,7 +91,7 @@ def minimal_neb_doc() -> dict[str, Any]:
 # so it stays in sync with schema changes during refactors. Mirror of
 # tests/fixtures/minimal_neb.tm.yaml.
 _MINIMAL_NEB: dict[str, Any] = {
-    "spec": "tm-spec/0.1",
+    "spec": "tm-spec/0.2",
     "kind": "NEBCalculation",
     "id":   "tm.fix.minimal.neb.2026-01-01",
     "structure": {

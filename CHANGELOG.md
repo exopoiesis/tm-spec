@@ -8,10 +8,61 @@ is bumped independently — see `docs/specification/`.
 
 ## [Unreleased]
 
-### Planned (v0.2)
+### Planned (v0.3)
 - Recipe registry hooks (`recipe:` block) — per Q-TMSPEC-9.
+- Lotsman runtime integration (`Marina.execute(yaml, host)` round-trip).
 - AiiDA bridge (`tm-spec → aiida-archive`).
 - QCSchema interop layer.
+
+## [0.2.0] — 2026-05-10
+
+Additive bump aimed at NOMAD ecosystem coverage and first PyPI release.
+Reference implementation tagged 0.2.0; spec bumped to `tm-spec/0.2`.
+Existing 0.1 docs remain valid — the validator selects schema by the
+doc's `spec:` field (`SUPPORTED_VERSIONS = ("0.1", "0.2")`).
+
+### Specification (`spec: tm-spec/0.2`)
+- Two new `kind`s for direct NOMAD coverage:
+  - `SinglePointCalculation` — single SCF (energy / forces / DOS / bands /
+    gap / Bader). Dominant NOMAD entry shape.
+  - `RelaxCalculation` — geometry optimisation (single trajectory).
+    Distinct from `NEBCalculation` (multiple endpoints) and `MDCalculation`
+    (time evolution).
+- New schema sections (`$defs`):
+  - `relax_protocol` — optimizer / fmax / max_steps / cell_relax.
+  - `electronic_structure_analysis` — DOS / band_structure / band_gap_eV /
+    charges / fermi_energy_eV / atomic magmoms.
+  - `results_singlepoint`, `results_relax` — kind-specific results blocks.
+- Provenance gains an optional `import_source` block (D-25) recording the
+  external archive (NOMAD/MP/AFLOW), entry id, importer version, and the
+  raw keys consulted (audit trail).
+- Three new design decisions: D-23 (SinglePoint kind), D-24 (Relax kind),
+  D-25 (NOMAD importer mapping convention).
+
+### Reference implementation
+- `tm_spec.importers.nomad` — bundled NOMAD entry → TM-Spec doc converter.
+  Uses anonymous NOMAD Archive API. Cached fixtures in `tests/fixtures/nomad/`.
+- New CLI sub-commands:
+  - `tm-spec import-nomad <entry_id> [--out FILE]`
+  - `tm-spec import-nomad-batch --query JSON --limit N --out-dir DIR/`
+- Validator: `schema_path(version=)` and `load_schema(version=)` accept an
+  explicit spec version; `validate_doc` auto-selects schema from the doc's
+  `spec:` field. Public API gains `SUPPORTED_VERSIONS`.
+
+### Examples
+- `examples/nomad_pyrite_singlepoint.tm.yaml` — pyrite SCF (NOMAD-imported,
+  PBE+D3, 96-atom supercell).
+- `examples/nomad_relax_example.tm.yaml` — geometry optimisation imported
+  from a public NOMAD entry.
+- All six v0.1 examples bumped to `spec: tm-spec/0.2` (no semantic changes;
+  v0.2 is a strict superset of v0.1).
+
+### Release infrastructure
+- `.github/workflows/release.yml` — OIDC trusted publishing to PyPI on
+  `git tag v*`. One-time PyPI-side setup required (pending publisher with
+  `owner=exopoiesis, repo=tm-spec, workflow=release.yml, env=pypi`).
+- README adds PyPI install snippet and badge (activates after first
+  successful release).
 
 ## [0.1.0] — 2026-05-10
 
@@ -76,5 +127,6 @@ implementation tagged 0.1.0.
   with expected directory structure.
 - `tests/test_versioning.py` — `spec` field matches `schemas/` filename.
 
-[Unreleased]: https://github.com/exopoiesis/tm-spec/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/exopoiesis/tm-spec/compare/v0.2.0...HEAD
+[0.2.0]:      https://github.com/exopoiesis/tm-spec/releases/tag/v0.2.0
 [0.1.0]:      https://github.com/exopoiesis/tm-spec/releases/tag/v0.1.0

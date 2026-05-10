@@ -13,8 +13,8 @@ from pathlib import Path
 import pytest
 import yaml
 
+from tm_spec import SPEC_VERSION, validate_doc
 from tm_spec import extract as extract_mod
-from tm_spec import validate_doc
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def test_extract_returns_yaml_string(fixture_script: Path) -> None:
     yaml_text, ins = extract_mod.extract(fixture_script)
     assert isinstance(yaml_text, str)
     assert yaml_text.startswith("# Auto-extracted")
-    assert "spec: tm-spec/0.1" in yaml_text
+    assert f"spec: tm-spec/{SPEC_VERSION}" in yaml_text
     assert ins is not None
 
 

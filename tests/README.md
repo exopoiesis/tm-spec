@@ -29,6 +29,7 @@ CI runs the same commands on Python 3.10/3.11/3.12/3.13 — see
 | `test_lint.py`                  | Pilot ↔ paired-script diff | One in-sync fixture (PASS) + one drift fixture (FAIL on cutoff/k-mesh, WARN on n_images/k_spring). Strict-mode escalation tested. |
 | `test_sanity_fill.py`           | Auto-fill of sanity gates | Drives G01 from `relaxed_*.xyz`, G03/G04/G05/G08/G09 from canonical NEB JSON, both happy and failure paths. |
 | `test_nomad_export.py`          | NOMAD upload bundle | Verifies directory layout, manifest, ZIP integrity, dry-run mode, CLI dispatch. |
+| `test_nomad_import.py`          | NOMAD archive importer | Converts cached NOMAD-shaped archive JSON into valid `SinglePointCalculation` and `RelaxCalculation` documents. |
 | `test_versioning.py`            | Version consistency | Ensures `SPEC_VERSION` / `__version__` / `pyproject.toml` / `CITATION.cff` / schema `$id` / schema `const: tm-spec/X.Y` / `schemas/<name>.json` filename — all agree. |
 | `test_cli.py`                   | `tm-spec` console script | help / version / unknown command / validate dispatch. |
 | `test_load_doc.py`              | YAML/JSON/JSONL ingestion | Datetime normalisation, JSONL streaming, unknown-extension rejection. |
@@ -47,6 +48,9 @@ CI runs the same commands on Python 3.10/3.11/3.12/3.13 — see
 - **neb_json/** — synthetic canonical-NEB result JSONs that drive the
   sanity-fill tests, with a "pass everything" file and a "fail
   everything" file.
+- **nomad/** — cached NOMAD-shaped archive JSON fixtures for offline
+  importer tests. They are intentionally small and synthetic enough to
+  keep CI stable while preserving the source keys used by the importer.
 
 ## Conventions
 

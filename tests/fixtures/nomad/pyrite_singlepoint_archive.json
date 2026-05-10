@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "entry_id": "pyrite_sp_0001",
+    "upload_id": "upload_pyrite_demo",
+    "upload_create_time": "2026-05-10T09:00:00+00:00"
+  },
+  "results": {
+    "material": {
+      "chemical_formula_descriptive": "Fe32S64",
+      "chemical_formula_reduced": "FeS2",
+      "chemical_formula_anonymous": "AB2",
+      "symmetry": {
+        "space_group_number": 205,
+        "space_group_symbol": "Pa-3",
+        "prototype_label_aflow": "AB2_cP12_205_a_c"
+      }
+    },
+    "method": {
+      "method_name": "DFT",
+      "simulation": {
+        "program_name": "QuantumESPRESSO",
+        "program_version": "7.3.1",
+        "dft": {
+          "xc_functional_type": "GGA",
+          "xc_functional_names": ["GGA_X_PBE", "GGA_C_PBE"],
+          "basis_set_type": "plane waves",
+          "spin_polarized": false
+        }
+      }
+    },
+    "properties": {
+      "energies": {
+        "energy_total": {
+          "value": -1.602176634e-16
+        }
+      },
+      "electronic": {
+        "band_gap": {
+          "value": 1.2817413072e-19
+        }
+      }
+    }
+  },
+  "run": [
+    {
+      "program": {
+        "name": "QuantumESPRESSO",
+        "version": "7.3.1"
+      },
+      "calculation": [
+        {
+          "energy": {
+            "total": {
+              "value": -1.602176634e-16
+            }
+          },
+          "scf_iteration": [
+            { "energy_total": -1.60e-16 },
+            { "energy_total": -1.602176634e-16 }
+          ]
+        }
+      ]
+    }
+  ]
+}

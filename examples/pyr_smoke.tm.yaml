@@ -3,12 +3,12 @@
 # Source: knowledge/handoffs/SESSION_HANDOFF_2026-04-30_s128.md
 #         + S128_LESSONS.md
 # Bind: infra/gpu_scripts/neb_canonical_pyr_96at_qe.py (s128 final, 8 patches)
-# Status: [DRAFT v0.1 — numbers from session log]
+# Status: [DRAFT v0.2 — numbers from session log]
 
-spec: tm-spec/0.1
+spec: tm-spec/0.2
 kind: NEBCalculation
 id: tm.pyr.vs.hint.smoke.2026-04-29
-schema_url: https://exopoiesis.github.io/tm-spec/0.1.json   # [HYPOTHESIS] published
+schema_url: https://exopoiesis.github.io/tm-spec/0.2.json   # additive bump v0.1→v0.2 (D-23/D-24)
 
 # ── 1. STRUCTURE ─────────────────────────────────────────
 structure:

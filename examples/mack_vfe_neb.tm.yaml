@@ -3,12 +3,12 @@
 # Source: knowledge/handoffs/SESSION_HANDOFF_2026-05-04_s133.md
 #         + S133_LESSONS.md
 # Bind: infra/gpu_scripts/neb_canonical_mack_136at_qe_VFe.py
-# Status: [DRAFT v0.1 — numbers from session log, not recomputed]
+# Status: [DRAFT v0.2 — numbers from session log, not recomputed]
 
-spec: tm-spec/0.1
+spec: tm-spec/0.2
 kind: NEBCalculation
 id: tm.mack.vfe.hint.neb.2026-05-04
-schema_url: https://exopoiesis.github.io/tm-spec/0.1.json   # [HYPOTHESIS] published
+schema_url: https://exopoiesis.github.io/tm-spec/0.2.json   # [HYPOTHESIS] published
 
 # ── 1. STRUCTURE ─────────────────────────────────────────
 structure:

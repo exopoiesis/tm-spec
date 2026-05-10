@@ -4,11 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name            = "tm-spec"
-version         = "0.1.0"
+version         = "0.2.0"
 description     = "Third Matter Specification — declarative YAML metalanguage and toolchain for DFT/MLIP/MD calculations with sanity gates."
 readme          = "README.md"
 requires-python = ">=3.10"
-license         = { file = "LICENSE" }
+license         = "MIT"
+license-files   = ["LICENSE"]
 authors         = [{ name = "Igor Morozov", email = "igor@exopoiesis.space" }]
 keywords        = [
     "DFT", "molecular dynamics", "MLIP", "NEB", "umbrella sampling",
@@ -18,7 +19,6 @@ keywords        = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",

@@ -28,6 +28,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .validator import SPEC_VERSION
+
 # AFLOW prototype label heuristics for known mineral spacegroups
 PROTOTYPE_HINTS: dict[int, tuple[str, str]] = {
     205: ("AB2_cP12_205_a_c", "pyrite FeS2"),
@@ -530,15 +532,15 @@ def compose(script_path: Path, ins: ScriptInspector) -> str:
 
     header = [
         f"# Auto-extracted from {rel_script}",
-        "# Generator: tm_spec.extract (v0.1)",
+        f"# Generator: tm_spec.extract (spec v{SPEC_VERSION})",
         "# Fields marked [auto] = static AST extraction. [hint] = heuristic (verify).",
         "# Fields marked [TODO_HUMAN] = manual completion required (semantic / runtime).",
         "# Stub uses valid enum defaults so it passes schema; replace before paper.",
         "",
-        "spec: tm-spec/0.1",
+        f"spec: tm-spec/{SPEC_VERSION}",
         f"kind: {kind}",
         f"id: tm.{mineral_tag}.todo.stub.2026-01-01      # [TODO_HUMAN: replace with real id]",
-        "schema_url: https://exopoiesis.github.io/tm-spec/0.1.json",
+        f"schema_url: https://exopoiesis.github.io/tm-spec/{SPEC_VERSION}.json",
         "",
     ]
 

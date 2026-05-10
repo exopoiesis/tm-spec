@@ -2,16 +2,16 @@
 # Real session: s107-s136 (RUNNING). 3×3×2 mack + 12 H2O + H+ explicit.
 # Source: knowledge/handoffs/SESSION_HANDOFF_2026-05-06_s136.md (W1 step 16700+/20000, ETA ~3-4 days)
 #         + paper §5b (bulk Grotthuss reference for two-regime narrative)
-# Status: [DRAFT v0.1 — RUNNING, status PRELIMINARY until completion]
+# Status: [DRAFT v0.2 — RUNNING, status PRELIMINARY until completion]
 #
 # *** NEW kind: MDCalculation ***
 # Plain MD (NVT-Nose), NOT enhanced sampling.
 # W2 metadyn (kind: MetaDynCalculation) and W2 US (kind: USCalculation) build on top of this trajectory.
 
-spec: tm-spec/0.1
+spec: tm-spec/0.2
 kind: MDCalculation
 id: tm.mack_3x3x2.h_proton.aimd_grotthuss_v1.2026-04-13
-schema_url: https://exopoiesis.github.io/tm-spec/0.1.json
+schema_url: https://exopoiesis.github.io/tm-spec/0.2.json
 
 # ── 1. STRUCTURE (3×3×2 mack — bulk Grotthuss reference) ──
 structure:

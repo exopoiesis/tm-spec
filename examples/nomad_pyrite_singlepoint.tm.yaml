@@ -1,0 +1,69 @@
+# TM-Spec pilot #7: NOMAD-imported pyrite single-point calculation.
+# Source fixture mirrors tm_spec.importers.nomad.archive_to_tm_spec output.
+
+spec: tm-spec/0.2
+kind: SinglePointCalculation
+id: tm.nomad.pyrite_sp_0001.2026-05-10
+schema_url: https://exopoiesis.github.io/tm-spec/0.2.json
+
+structure:
+  formula: Fe32S64
+  chemical_formula_descriptive: Fe32S64
+  chemical_formula_reduced: FeS2
+  chemical_formula_anonymous: AB2
+  space_group: { number: 205, symbol: Pa-3 }
+  prototype: AB2_cP12_205_a_c
+  pbc: [true, true, true]
+
+magnetic:
+  state: NM
+  collinear: true
+
+calculation:
+  method: DFT
+  level:
+    xc: GGA
+    xc_libxc: [GGA_X_PBE, GGA_C_PBE]
+    basis: { kind: plane_waves }
+    spin: none
+  code: { name: QuantumESPRESSO, version: "7.3.1" }
+
+electronic_structure_analysis:
+  band_gap_eV: { value: 0.8, type: indirect }
+
+results:
+  status: PRELIMINARY
+  paper_quotable: false
+  energy_eV: -1000.0
+  scf_converged: true
+  band_gap_eV: 0.8
+  notes: "Imported from NOMAD; rerun project sanity gates before quoting."
+
+sanity:
+  - id: G05_scf_converged
+    rule: "NOMAD parser reports at least one converged SCF step"
+    observed: true
+    pass: true
+  - id: G06_ascii_safe
+    rule: "ASCII-only doc body"
+    pass: "skip"
+
+provenance:
+  date: 2026-05-10
+  author: import@nomad
+  import_source:
+    archive: nomad
+    entry_id: pyrite_sp_0001
+    upload_id: upload_pyrite_demo
+    url: https://nomad-lab.eu/prod/v1/gui/entry/id/pyrite_sp_0001
+    imported_at: 2026-05-10T09:00:00+00:00
+    importer: tm-spec import-nomad@0.2.0
+    raw_keys:
+      - results.material
+      - results.method.simulation.dft
+      - results.properties.energies.energy_total
+      - results.properties.electronic.band_gap
+      - metadata.entry_id
+      - metadata.upload_id
+  compute: { host: nomad-archive, cost_usd: 0.0 }
+
