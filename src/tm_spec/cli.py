@@ -20,13 +20,16 @@ import sys
 from . import __version__
 
 SUBCOMMANDS = {
-    "validate":           "tm_spec.validator:main",
-    "extract":            "tm_spec.extract:main",
-    "lint":               "tm_spec.lint:main",
-    "sanity-fill":        "tm_spec.sanity_fill:main",
-    "export-nomad":       "tm_spec.exporters.nomad:main",
-    "import-nomad":       "tm_spec.importers.nomad:main",
-    "import-nomad-batch": "tm_spec.importers.nomad:main_batch",
+    "validate":              "tm_spec.validator:main",
+    "extract":               "tm_spec.extract:main",
+    "lint":                  "tm_spec.lint:main",
+    "sanity-fill":           "tm_spec.sanity_fill:main",
+    "export-nomad":          "tm_spec.exporters.nomad:main",
+    "import-nomad":          "tm_spec.importers.nomad:main",
+    "import-nomad-batch":    "tm_spec.importers.nomad:main_batch",
+    "import-optimade":       "tm_spec.importers.optimade:main",
+    "import-optimade-batch": "tm_spec.importers.optimade:main_batch",
+    "merge":                 "tm_spec.merge:main",
 }
 
 

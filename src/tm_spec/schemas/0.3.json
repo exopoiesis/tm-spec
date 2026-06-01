@@ -1948,6 +1948,47 @@
         }
       }
     },
+    "import_source_record": {
+      "type": "object",
+      "description": "Per D-25: one external-archive import record. Several records may be collected into an array under provenance.import_source after a merge.",
+      "properties": {
+        "archive": {
+          "enum": [
+            "nomad",
+            "materials_project",
+            "aflow",
+            "oqmd",
+            "jarvis",
+            "other"
+          ]
+        },
+        "entry_id": {
+          "type": "string"
+        },
+        "upload_id": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "imported_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "importer": {
+          "type": "string",
+          "description": "e.g. tm-spec import-nomad@0.2.0"
+        },
+        "raw_keys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Source archive keys consulted (audit trail)."
+        }
+      }
+    },
     "sanity_gates": {
       "type": "array",
       "items": {
@@ -2010,45 +2051,19 @@
           }
         },
         "import_source": {
-          "type": "object",
-          "description": "Per D-25: provenance for docs imported from external archives (NOMAD, Materials Project, AFLOW).",
-          "properties": {
-            "archive": {
-              "enum": [
-                "nomad",
-                "materials_project",
-                "aflow",
-                "oqmd",
-                "jarvis",
-                "other"
-              ]
+          "description": "Per D-25: provenance for docs imported from external archives (NOMAD, Materials Project, AFLOW). A single record for a one-archive import, OR an array of records when a doc was merged from several archives (e.g. NOMAD method depth + OPTIMADE structure width via `tm-spec merge`).",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/import_source_record"
             },
-            "entry_id": {
-              "type": "string"
-            },
-            "upload_id": {
-              "type": "string"
-            },
-            "url": {
-              "type": "string",
-              "format": "uri"
-            },
-            "imported_at": {
-              "type": "string",
-              "format": "date-time"
-            },
-            "importer": {
-              "type": "string",
-              "description": "e.g. tm-spec import-nomad@0.2.0"
-            },
-            "raw_keys": {
+            {
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/import_source_record"
               },
-              "description": "Source archive keys consulted (audit trail)."
+              "minItems": 1
             }
-          }
+          ]
         },
         "compute": {
           "type": "object",

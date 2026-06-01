@@ -38,6 +38,14 @@ validator selects schema by the doc's `spec:` field
   `cvar_usd` / `utility`). Optional; not part of any kind's required set.
 - New shared gate registry at `docs/gate-registry.md` — canonical
   vocabulary for both `sanity[]` and `preflight.gates[]`.
+- `structure.geometry_origin` (same enum as `endpoint.geometry_origin`) for
+  single-structure docs that have no `endpoint` block (e.g. SinglePoint /
+  Relax imports). Additive, same `G09_geometry_origin` gate.
+- `provenance.import_source` may now be **either** a single record (one-archive
+  import, unchanged) **or an array** of records (a doc merged from several
+  archives — e.g. NOMAD method depth + OPTIMADE structure width via
+  `tm-spec merge`). Factored into `$defs.import_source_record`. Backward
+  compatible: every existing single-object `import_source` still validates.
 
 ### Reference implementation
 - Validator: `SPEC_VERSION = "0.3"`, `SUPPORTED_VERSIONS = ("0.1", "0.2",
@@ -51,6 +59,27 @@ validator selects schema by the doc's `spec:` field
   prodromos-ready — they carry `structure.formula` (element counts for
   `G11_electron_parity` / `G19_external_reference`) and
   `calculation.level` (xc / basis / spin provenance).
+- New OPTIMADE importer (`import-optimade` / `import-optimade-batch`,
+  `tm_spec.importers.optimade`). Queries any OPTIMADE `structures` endpoint
+  (Materials Project default; NOMAD / OQMD / Alexandria registered) and emits
+  a `SinglePointCalculation` doc per hit. Honest about OPTIMADE being
+  structure-level only: `structure.geometry_origin: unknown`, a minimal
+  `calculation: {method: DFT}` stub, and a `PRELIMINARY` non-quotable result.
+  Mapping per `docs/standards-alignment.md` §2 (formula variants,
+  `lattice_vectors_A`, `pbc` / `dimension_types`, `structure_features` note).
+  Pure transform (`_parse_optimade_structures`) is mockable/offline; `--offline`
+  skips the network. HTTP via httpx when available, else stdlib urllib.
+- New reusable, network-free merge engine (`tm-spec merge`,
+  `tm_spec.merge.merge_docs`). Deep, fill-only merge that keeps non-null base
+  values and fills holes from the overlay; prefers the more specific
+  `geometry_origin`; unions `sanity` / `preflight.gates` by id and
+  `provenance.parents/literature/decisions`; collects both `import_source`
+  records. Same-material guard (`MATERIAL_MISMATCH` raise, or warn with
+  `--allow-material-mismatch`). Scalar conflicts keep base + emit a
+  `CONFLICT <path>` warning.
+- `import-optimade --merge <base>` folds each OPTIMADE hit into a local
+  (usually NOMAD-imported) base doc, matching by material — NOMAD depth +
+  OPTIMADE width, locally, no manual editing.
 
 ### Examples
 - `examples/preflight_example.tm.yaml` — NEBCalculation demonstrating

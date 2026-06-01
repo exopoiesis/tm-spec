@@ -65,6 +65,20 @@ tm-spec extract path/to/neb_canonical.py --out tmp/stub.tm.yaml
 # single points, mlip_relaxed for ML methods; prodromos-ready out of the box)
 tm-spec import-nomad <entry_id> --out imported.tm.yaml
 
+# import structures from any OPTIMADE provider (Materials Project, NOMAD,
+# OQMD, Alexandria). Structure-level only, so geometry_origin is honestly
+# "unknown" and calculation is a minimal DFT stub.
+tm-spec import-optimade --elements Fe S --provider mp --out fes.tm.yaml
+tm-spec import-optimade --reduced-formula FeS2 --json
+
+# merge two TM-Spec docs locally (fill-only, same-material guarded): base
+# depth (e.g. NOMAD method/results) is kept, overlay fills the holes (e.g.
+# OPTIMADE formula variants + lattice_vectors).
+tm-spec merge nomad.tm.yaml optimade.tm.yaml --out merged.tm.yaml
+
+# one-shot: import OPTIMADE and merge each hit into a local NOMAD base
+tm-spec import-optimade --reduced-formula FeS2 --merge nomad.tm.yaml --out merged.tm.yaml
+
 # diff a hand-crafted pilot against its paired script
 tm-spec lint examples/pyr_smoke.tm.yaml
 
