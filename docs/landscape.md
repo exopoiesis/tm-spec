@@ -23,35 +23,14 @@
 | **NOMAD's "Tools and Inputs"** | JSON/YAML upload | Yes (browser) | NOMAD ecosystem | No (submit raw inputs only) |
 | **PWmat / Materials Studio** | GUI proprietary | Yes | Industry (Chinese labs) | No |
 | **DFT-FE web tools** (NSF CI) | Web form | Yes | US academic, narrow | Via cluster allocations |
-| **TM-Spec** (ours) | YAML + recipe registry | Yes (YAML, Recipe abstracts away Python) | Nobody (yet) | **Yes** (Lotsman + Vast.ai) |
+| **TM-Spec** (ours) | YAML + recipe registry | Yes (YAML, Recipe abstracts away Python) | Nobody (yet) | **Yes** (orchestrator + ephemeral cloud GPU) |
 
 ---
 
-## Closest Competitor — AiiDAlab QE
-
-- URL: https://github.com/aiidalab/aiidalab-qe
-- Web app on top of AiiDA + `aiida-quantumespresso`. The user fills in a form
-  (structure, k-mesh, smearing, magnetic) and clicks "Run" — AiiDA launches
-  PwBaseWorkChain.
-- **Very good** for standard QE workflows (relax, bands, phonons).
-- **Poor fit** for our use case:
-  - Web app, not a git-tracked text artefact
-  - AiiDA daemon required (heavy infrastructure)
-  - None of our custom patches (idpp prewrap, MLIP US, sanity gates)
-  - QE-only, not cross-code
-
-Beyond AiiDAlab, **there is no direct competitor combining declarative cross-code
-+ sanity gates + ephemeral compute**. This is surprising but true.
-
----
-
-## 4 Niches Where TM-Spec Can Take a Position
+## Niches Where TM-Spec Can Claim a Position
 
 ### Niche 1 — Paper SI Format
 
-**Nobody does this declaratively.**
-- Currently, paper SI sections contain either INCAR/QE.in dumps (code-specific)
-  or AiiDA Provenance archives (heavy, require AiiDA to open).
 - A TM-Spec YAML file is **readable in any editor**, validates via
   `tm_spec_validator`, and requires no runtime for inspection.
 - A reviewer opens one YAML file and sees structure + level of theory +
@@ -60,9 +39,9 @@ Beyond AiiDAlab, **there is no direct competitor combining declarative cross-cod
 
 ### Niche 2 — Ephemeral Cloud Compute
 
-- AiiDA does not work well with Vast.ai-style ephemeral instances.
+- AiiDA does not work well with ephemeral cloud instances.
 - atomate2 + jobflow is more flexible, but still Python-heavy.
-- TM-Spec + Lotsman = **YAML → script → ephemeral compute → updated YAML**.
+- TM-Spec + an orchestrator = **YAML → script → ephemeral compute → updated YAML**.
   No daemon, no database.
 - Niche: low-budget research, freelance scientists, students without doctoral
   cluster access.
@@ -72,8 +51,7 @@ Beyond AiiDAlab, **there is no direct competitor combining declarative cross-cod
 - AiiDA workflows are generic (relax, bands, NEB) — they do not account for
   Fe-S quirks (idpp prewrap, mack PM-itinerant, V_Fe charge balance).
 - TM-Spec recipes = **encyclopedia of patches** for specific chemistry.
-  Each recipe encodes best practices + lessons learned (our DEADLY_MISTAKES.md
-  compiled into sanity gates).
+  Each recipe encodes best practices + lessons learned (compiled into sanity gates).
 - Niche: Fe-S minerals — if it works there, it can spread to oxides, MOFs,
   perovskites via community recipes.
 
@@ -81,7 +59,7 @@ Beyond AiiDAlab, **there is no direct competitor combining declarative cross-cod
 
 - "I want to reproduce figure X from paper Y" — currently requires: clone AiiDA
   archive, install AiiDA, parse complex provenance. Or guess from INCAR.
-- TM-Spec: one YAML file + Lotsman + cloud GPU for $5 = bit-exact reproduction.
+- TM-Spec: one YAML file + an orchestrator + cloud GPU for $5 = bit-exact reproduction.
 - Niche: courses, paper-replication services, undergraduate research.
 
 ---
@@ -110,7 +88,7 @@ Beyond AiiDAlab, **there is no direct competitor combining declarative cross-cod
    the community. Do not position TM-Spec as "better than AiiDA".
 3. **Publish TM-Spec on GitHub under the MIT license.** Schema + validator +
    extractor + lint + sanity_fill = **standalone tool with no dependency on
-   Lotsman**. Anyone can use it as paper SI tooling.
+   the orchestrator**. Anyone can use it as paper SI tooling.
 4. **AiiDA bridge — later.** If someone in the community requests a
    "TM-Spec → AiiDA archive converter", we will build it. Not preemptively.
 5. **Possible long-term positioning:** TM-Spec becomes the **second** standard
@@ -163,7 +141,7 @@ adopters**. TM-Spec follows the same pattern:
 3. ⏳ After submission — monitoring reviewer feedback. If positive →
    publish TM-Spec on GitHub under MIT, write a blog post, post
    to Bluesky/Mastodon in the materials science community.
-4. ⏳ Q-TMSPEC-9..11 (recipe registry + Lotsman runtime) — after
+4. ⏳ Q-TMSPEC-9..11 (recipe registry + orchestrator runtime) — after
    submission, as a medium-term investment.
 
 ## What We Are NOT Doing Now

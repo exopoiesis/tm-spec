@@ -320,7 +320,7 @@ Examples decoded (verified):
 ### TM-Spec mismatch
 | TM-Spec field | AiiDA | Decision |
 |---|---|---|
-| `provenance.parents: [tm.mack.vfe.hint.smoke@2026-05-03, Q-115@...]` | edges via INPUT_CALC/INPUT_WORK + uuid links | **keep** human-readable parent IDs (our deliberate design choice); export mapping `parent_id → uuid` via aiida lookup |
+| `provenance.parents: [tm.mack.vfe.hint.smoke@2026-05-03]` | edges via INPUT_CALC/INPUT_WORK + uuid links | **keep** human-readable parent IDs (our deliberate design choice); export mapping `parent_id → uuid` via aiida lookup |
 | `provenance.author: igor@exopoiesis.space` | `Node.user.email` | **adopt** field path |
 | `provenance.compute.cost_usd / walltime_h` | no native fields — stored in `attributes` or `extras` | **keep** our fields; export → `extras.tm_compute` |
 | `provenance.hash.inputs/outputs sha256` | AiiDA hashes inputs automatically in `attributes._aiida_hash` | **additionally adopt** on export |

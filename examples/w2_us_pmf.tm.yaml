@@ -1,12 +1,9 @@
-# Pilot TM-Spec artefact #3: W2 US PMF, mack 3×3×1 + 12 H2O + H+
-# Real session: s136 (2026-05-06). Cost: $0 (gomer free). PASS, paper-quotable.
-# Source: knowledge/handoffs/SESSION_HANDOFF_2026-05-06_s136.md
-#         + paper/SI/SI_w2_us_pmf_2026-05-06.md
-# Bind: infra/us_protocol/run_mlip_us_native.py
-# Status: [DRAFT v0.2 — numbers from session log]
+# Pilot TM-Spec artefact #3: US PMF, mack 3×3×1 + 12 H2O + H+
+# PASS, paper-quotable.
+# Status: [DRAFT v0.2 — numbers from a prior campaign log]
 #
 # *** NEW kind: USCalculation ***
-# Closes Q-TMSPEC-1 — separate kind for enhanced sampling (CV definition,
+# A separate kind for enhanced sampling (CV definition,
 # windows, WHAM analysis don't fit clean into NEBCalculation schema).
 
 spec: tm-spec/0.2
@@ -46,9 +43,8 @@ magnetic:
     Fe[top_layer]:    +3.5
     Fe[bottom_layer]: -3.5
   surrogate_warning: |
-    For DFT reference (s121, W2 metad). MLIP foundation models do NOT explicitly
+    For the DFT reference (WT-MetaD). MLIP foundation models do NOT explicitly
     enforce AFM — magnitude-only magmom training (CHGNet) or implicit (MACE-MP-0).
-    See knowledge/CHGNET_LESSONS.md.
 
 # ── 4. ENVIRONMENT ───────────────────────────────────────
 environment:
@@ -76,7 +72,7 @@ calculation:
       variant: medium
       foundation: true
       fine_tuned: false
-      version: "v0.3.6 (canonical s136)"
+      version: "v0.3.6 (canonical)"
     - name: CHGNet
       variant: v0.3.0
       foundation: true
@@ -90,22 +86,22 @@ calculation:
   timestep_fs: 0.5
   code:
     framework: ASE 3.23
-    container: gomer/mace-canonical, gomer/chgnet-canonical
+    container: gpu-host/mace-canonical, gpu-host/chgnet-canonical
     note: |
-      MACE+CHGNet share /workspace volume on host (RTX 4070 12 GB).
+      MACE+CHGNet share a workspace volume on the host (RTX 4070 12 GB).
       Sequential deploy required (parallel → OOM).
 
 # ── 7. CV DEFINITION (US-specific, new section) ──────────
 cv_definition:
   name: d_FeH_softmin
   type: smooth_min_distance
-  variables: "d(Fe_i, H+) for i in 1..18"   # symbolic; explicit list at runtime in run_mlip_us_native.py
+  variables: "d(Fe_i, H+) for i in 1..18"   # symbolic; explicit list at runtime
   formula: |
     softmin(d_FeH; β=10) = -1/β · log(Σ_i exp(-β·d_FeH_i))
   approximates: "min distance from excess proton to any Fe in supercell"
   units: Å
   beta: 10.0
-  python_impl: infra/us_protocol/run_mlip_us_native.py
+  python_impl: scripts/run_mlip_us_native.py
   validated_by: |
     FD test (test_restraint_consistency.py): max |grad_analytic − grad_FD| < 1e-8 ✓
 
@@ -154,7 +150,7 @@ results:
   cross_validation:
     abs_diff_saddle_eV:  0.48                 # |MACE − CHGNet|, factor ~2.5
     abs_diff_plateau_eV: 0.36
-    DFT_v1_metad_LB_eV:  0.40                 # W2_DEBUG_ANALYSIS_2026-05-01
+    DFT_v1_metad_LB_eV:  0.40
     DFT_v1_metad_2σ_eV:  0.61                 # suggestive
     consistent_with_DFT: true                 # both MLIPs bracket DFT LB
   paper_bracket:
@@ -194,12 +190,10 @@ provenance:
   parents:
     - tm.w2.metad.v1@2026-05-01               # DFT lower bound
     - tm.mlip_preflight.mack_3x3x1@2026-05-06 # 5 ps NVT pre-flight (96.6%/99.8% Fe-chemi)
-  decisions: [DECISION-091]                    # US apples-to-apples protocol
   literature:
     - Kumar1992                                # WHAM
-    - "s121"                                   # original Fe-chemi observation
   compute:
-    host: gomer
+    host: gpu-host
     gpu: RTX 4070 12 GB
     cost_usd: 0.00                             # free local
     walltime_h: 9.13

@@ -127,8 +127,8 @@ sanity:
 provenance:
   date: 2026-04-29
   author: igor@exopoiesis.space
-  parents: ["Q-115@2026-04-28"]
-  compute: { host: vast-W3, gpu: A100, cost_usd: 4.0, walltime_h: 6.0 }
+  parents: ["tm.pyr.vs.hint.pristine@2026-04-29"]
+  compute: { host: cloud-gpu, gpu: A100, cost_usd: 4.0, walltime_h: 6.0 }
   hash:
     inputs: sha256:placeholder_to_be_computed
     outputs: sha256:placeholder_to_be_computed

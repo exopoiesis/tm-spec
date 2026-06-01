@@ -7,7 +7,7 @@
 
 ---
 
-## v0.1 → v0.2 alignment (2026-05-09, after STANDARDS_ALIGNMENT.md)
+## v0.1 → v0.2 alignment (2026-05-09, after standards-alignment.md)
 
 ### D-01 | 2026-05-09 | Smearing kind: lowercase enum
 - **Decision:** `Marzari-Vanderbilt` → `marzari-vanderbilt`. Also `gaussian`, `fermi`, `methfessel-paxton`, `tetrahedra` — all lowercase.
@@ -90,15 +90,15 @@
 
 ### D-14 | 2026-05-09 | `paper_quotable: bool` + `quote_constraint` extension
 - **Decision:** keep `paper_quotable: bool` as a first-class field. **Refinement (D-19 follow-up):** for partial cases (lower bound, upper bound) add a separate optional field `quote_constraint: lower_bound_only | upper_bound_only | point_estimate | range_only`. This keeps `paper_quotable` a clean boolean and adds an orthogonal dimension "how exactly to cite".
-- **Source:** our chemist+physicist opus QA pipeline + W2 metad pilot (LB-only result).
+- **Source:** our chemist+physicist opus QA pipeline + a metadynamics pilot (LB-only result).
 - **Breaking:** NO.
 
 ### D-15 | 2026-05-09 | Sanity gates: 4-value pass enum
 - **Decision:** `sanity[].pass: true | false | "warn" | "skip"`.
   - `true/false` — gate passed successfully / failed.
-  - `"warn"` — gate flagged an anomaly that is not blocking (W2 US T_drift, WHAM convergence).
-  - `"skip"` — gate not applicable to this kind (W2 US does not check AFM because MLIP does not enforce magmom).
-- **Source:** original TM-Spec semantics, observed in W2 US pilot.
+  - `"warn"` — gate flagged an anomaly that is not blocking (US T_drift, WHAM convergence).
+  - `"skip"` — gate not applicable to this kind (US does not check AFM because MLIP does not enforce magmom).
+- **Source:** original TM-Spec semantics, observed in the US pilot.
 - **Breaking:** NO.
 
 ### D-16 | 2026-05-09 | Cost format: structured object
@@ -114,7 +114,7 @@
     - { name: CHGNet,    variant: v0.3.0, foundation: true, fine_tuned: false }
   ```
 - **Source:** MACE foundation_models.py + CHGNet model.py variant naming [FACT].
-- **Breaking:** NO (W2 US pilot already uses backends[]).
+- **Breaking:** NO (the US pilot already uses backends[]).
 
 ---
 
@@ -137,18 +137,18 @@
 ### D-19 | 2026-05-10 | MetaDynCalculation kind with three new sections
 - **Decision:** new `kind: MetaDynCalculation` with three required sections:
   1. **`cv_definition`** — reused from USCalculation (same CV semantics).
-  2. **`metadyn_protocol`** (NEW) — variant (well_tempered/standard/tigersaw/frequency_adaptive), hill (height + width + freq), bias_factor (γ + effective_dT), wall (type/position/k), monitoring (3-phase from CP2K_METADYN_RESTART_MONITORING).
+  2. **`metadyn_protocol`** (NEW) — variant (well_tempered/standard/tigersaw/frequency_adaptive), hill (height + width + freq), bias_factor (γ + effective_dT), wall (type/position/k), monitoring (3-phase).
   3. **`fes_analysis`** (NEW) — FES reconstruction method (WT_reweighting / direct_integration / Tiwary_Parrinello / WHAM), grid (with bounds + coverage flag), wall_correction (for post-hoc math fix), convergence (target + achieved boolean).
   4. Results: new `$defs/results_metad` with `delta_F_dagger_eV: object` (multiple estimates: apparent / extended_grid / wall_corrected_LB / extrapolated_2sigma) + `cross_validation_eV` (vs other methods) + `quote_constraint` (D-14 extension).
-- **Source:** Barducci 2008 WT-MetaD canonical, knowledge/W2_DEBUG_ANALYSIS_2026-05-01.md, knowledge/CP2K_METADYN_RESTART_MONITORING.md, our s130 math audit.
+- **Source:** Barducci 2008 WT-MetaD canonical, plus an internal metadynamics audit.
 - **Breaking:** NO (new kind, added alongside existing kinds).
-- **New sanity gates from w2_metad pilot:**
+- **New sanity gates from the metadynamics pilot:**
   - `G17_grid_coverage` — FES grid covers CV_max + 3σ (bug #1 catcher)
   - `G18_wall_position` — wall.position > max(initial_CV) (bug #2 catcher)
   - `G19_wt_convergence` — block window analysis target
   - `G20_no_grotthuss_exchange` — CV(tracked_H) stays > threshold (CV proxy validity)
-  - `G21_phase1_no_hot_start` — T_mean steps 1-10 < 320 K (s107 lesson)
-  - `G22_phase2_no_T_drift` — |T_slope| < 5 K/ps (F-045 lesson)
+  - `G21_phase1_no_hot_start` — T_mean steps 1-10 < 320 K
+  - `G22_phase2_no_T_drift` — |T_slope| < 5 K/ps
   - `G23_hill_units_explicit` — WW unit specifier present (CP2K Hartree gotcha)
   - `G24_wall_correction_applied` — if wall sampled, F_real - V_wall
 
@@ -156,20 +156,20 @@
 
 ### D-21 | 2026-05-10 | MDCalculation kind with md_protocol + trajectory_analysis + results_md
 - **Decision:** new `kind: MDCalculation` for plain MD (not enhanced sampling). Required sections: `md_protocol` (ensemble + thermostat + timestep + duration), `results` (results_md). Optional `trajectory_analysis` (msd, rdf, vacf, hbond_lifetime, diffusion_coefficient, grotthuss_hops, speciation).
-- **Source:** W1 grotthuss CP2K AIMD (s107-s136 RUNNING) — real pilot.
+- **Source:** a bulk-Grotthuss CP2K AIMD pilot.
 - **Pilot:** `examples/w1_grotthuss_aimd.tm.yaml`.
 - **Breaking:** NO.
 
 ### D-22 | 2026-05-10 | MLIPBenchmark kind with benchmark_setup + metrics + results_mlip_bench
 - **Decision:** new `kind: MLIPBenchmark` for cross-method comparison (not a description of a single run, but a **comparison** across backends ± DFT reference). Required: `benchmark_setup` (reference + test_systems + test_observables), `metrics` (Ea_RMSE, abs_diff_saddle, frac_correct_basin etc.), `results` (results_mlip_bench with per_backend + verdict).
-- **Source:** W2 US comparison s136 (MACE vs CHGNet vs DFT WT-MetaD).
+- **Source:** a US comparison (MACE vs CHGNet vs DFT WT-MetaD).
 - **Pilot:** `examples/w2_mlip_benchmark.tm.yaml`. Distinct from `w2_us_pmf.tm.yaml` (that file describes the run EVENT; this file describes the ANALYSIS comparison).
 - **Breaking:** NO.
 
-### D-20 | 2026-05-10 | Q115_NOMAD_BENCHMARKS confirms nspin=1 + U=0 for mack/pent
+### D-20 | 2026-05-10 | nspin=1 + U=0 confirmed for mack/pent
 - **Decision:** our current setup (`nspin=1`, U=0 for mack/pent/pyr) is community mainstream 2014-2026; **no justification is needed** in the paper. Tier 1 AFM+U=2 sensitivity (if included in SI) uses U=2, not U=4 (literature standard: Devey 2009 / Williams 2022 / Safeer cRPA 2026).
-- **Source:** `knowledge/Q115_NOMAD_BENCHMARKS.md` — 17 verified DOI/MP-IDs across 5 minerals. Devey 2008-2009 explicitly: "U>0 → unphysical for mackinawite Fe-3d delocalization".
-- **Impact on pilots:** mack_vfe_neb pilot rewritten from `state: AFM-G + U=4` to `state: NM + U=0` (correctly reflects the s133 real script).
+- **Source:** an internal benchmark review — 17 verified DOI/MP-IDs across 5 minerals. Devey 2008-2009 explicitly: "U>0 → unphysical for mackinawite Fe-3d delocalization".
+- **Impact on pilots:** mack_vfe_neb pilot rewritten from `state: AFM-G + U=4` to `state: NM + U=0` (correctly reflects the production script).
 - **Adjustment for Tier 1 sensitivity (if included in SI):** `starting_magnetization` ±2.5 μB (not ±1.0) — avoids FM collapse.
 - **Breaking:** YES for pilots, NO for schema (NM/U=0 already valid). Applied to mack_vfe_neb pilot 2026-05-10.
 
@@ -177,7 +177,7 @@
 
 ## Open [QUESTION]
 
-### Q-TMSPEC-9 [2026-05-10] — Recipe registry for inverse conversion (Lotsman runtime)
+### Q-TMSPEC-9 [2026-05-10] — Recipe registry for inverse conversion
 
 **Concept:** TM-Spec → executable Python script via recipe template engine. Inverse `tm_spec_extract.py`.
 
@@ -208,12 +208,12 @@ tools/tm_recipes/
 
 Each recipe is a Python class with `render(doc) → str` (jinja2 or f-strings) → ready-to-exec script source.
 
-**Lotsman workflow** (`lotsman.execute_tm_spec(yaml, instance)`):
+**Orchestrator workflow** (`runtime.execute_tm_spec(yaml, instance)`):
 1. Validate (our `tm_spec_validator`)
 2. Resolve recipe by `name@version`
 3. Render → script source + sha256 hash
-4. Deploy to instance (Lotsman already supports this)
-5. Watch + harvest (Lotsman already supports this)
+4. Deploy to instance
+5. Watch + harvest
 6. Auto-fill (our `tm_spec_sanity_fill`)
 7. Update provenance (host, walltime, cost, hash)
 8. Return updated YAML
@@ -234,9 +234,9 @@ Each recipe is a Python class with `render(doc) → str` (jinja2 or f-strings) �
 2. One recipe `canonical_neb_qe_vacancy_hop` (port `neb_canonical_pyr_96at_qe.py`, 90 min)
 3. `tools/tm_spec_to_script.py` generator (30 min)
 4. Round-trip test pyr_smoke.tm.yaml + recipe → script vs original (20 min)
-5. Lotsman API stub `execute_tm_spec()` (30 min)
+5. Orchestrator API stub `execute_tm_spec()` (30 min)
 
-**Status:** [DEFERRED] — after paper #1 submission (next week). Recipe registry is a medium-term investment; payoff after 5+ submissions.
+**Status:** [DEFERRED] — after paper #1 submission. Recipe registry is a medium-term investment; payoff after 5+ submissions.
 
 ---
 
@@ -248,12 +248,12 @@ Each recipe is a Python class with `render(doc) → str` (jinja2 or f-strings) �
 
 | Backend | Reusable for | NOT reusable |
 |---|---|---|
-| **AiiDA** + `aiida-quantumespresso`/`aiida-cp2k` | Standard relax/NEB/MD WorkChains; native provenance graph; `aiida-nomad` upload | ASE issue #1130 fix; custom triple picker (diagonal mode); MLIP US PMF; Vast.ai ephemeral (requires permanent host for daemon + Postgres + RabbitMQ) |
+| **AiiDA** + `aiida-quantumespresso`/`aiida-cp2k` | Standard relax/NEB/MD WorkChains; native provenance graph; `aiida-nomad` upload | ASE issue #1130 fix; custom triple picker (diagonal mode); MLIP US PMF; ephemeral cloud GPU (requires permanent host for daemon + Postgres + RabbitMQ) |
 | **atomate2** Makers | Pydantic-typed input sets; emmet TaskDoc compat; Maker pattern as design inspiration | NEB Maker still in development 2026; VASP-biased (~80%); not for CP2K WT-MetaD / MLIP US |
 
 **Decision:** **hybrid runtime** — TM-Spec supports multiple backends via `recipe.runtime`:
-- `native` (default) — our registry, ASE scripts. For Vast.ai ephemeral + custom patches + MLIP US (~80% of our cases).
-- `aiida` — TM-Spec → AiiDA WorkChain inputs converter. For standard recipes on a permanent host (gomer) when full provenance graph is desired.
+- `native` (default) — our registry, ASE scripts. For ephemeral cloud GPU + custom patches + MLIP US (~80% of our cases).
+- `aiida` — TM-Spec → AiiDA WorkChain inputs converter. For standard recipes on a permanent host when full provenance graph is desired.
 - `atomate2` — for future VASP work (currently 0%).
 
 **What is worth adopting (without full reuse):**
@@ -269,7 +269,7 @@ Each recipe is a Python class with `render(doc) → str` (jinja2 or f-strings) �
 
 **Question:** are we competing with industry standards (AiiDA) or finding a complementary niche?
 
-**Landscape analysis:** see `LANDSCAPE.md` for a detailed table (10 tools).
+**Landscape analysis:** see `landscape.md` for a detailed table (10 tools).
 
 **Closest competitor — AiiDAlab QE** (https://github.com/aiidalab/aiidalab-qe). Web app on top of AiiDA for declarative QE input. Addresses the "scientist without Python" use case, but: web app (not git-tracked text), QE-only, AiiDA daemon required.
 
@@ -277,7 +277,7 @@ Each recipe is a Python class with `render(doc) → str` (jinja2 or f-strings) �
 
 **4 niches where TM-Spec can claim a position:**
 1. **Paper SI format** — no one provides declarative cross-code SI. **Unique value.**
-2. **Ephemeral cloud compute** — AiiDA is not compatible with Vast.ai. Lotsman + TM-Spec = niche.
+2. **Ephemeral cloud compute** — AiiDA is not compatible with ephemeral cloud GPU. An ephemeral orchestrator + TM-Spec = niche.
 3. **Domain-specific recipes** — encyclopedia of patches for Fe-S (extensible to oxides/MOFs).
 4. **Educational / reproducibility** — bit-exact reproduction via YAML + cloud GPU.
 

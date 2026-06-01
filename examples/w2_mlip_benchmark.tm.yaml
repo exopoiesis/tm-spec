@@ -1,7 +1,5 @@
-# Pilot TM-Spec artefact #6: MLIP cross-method benchmark vs DFT (W2 system)
-# Real session: s136 (DONE 2026-05-06). MACE-MP-0 + CHGNet vs CP2K WT-MetaD reference.
-# Source: paper/SI/SI_w2_us_pmf_2026-05-06.md
-#         + handoffs/SESSION_HANDOFF_2026-05-06_s136.md
+# Pilot TM-Spec artefact #6: MLIP cross-method benchmark vs DFT
+# MACE-MP-0 + CHGNet vs CP2K WT-MetaD reference.
 # Status: [DRAFT v0.2 — DONE]
 #
 # *** NEW kind: MLIPBenchmark ***
@@ -29,7 +27,7 @@ defects:
   reactions: ["nil → H_aq^+(water_layer) + e'(solid)"]
   population: { H_excess: { count: 1, location: aqueous_layer } }
 
-magnetic: { state: NM, collinear: true, magmoms_uB: {}, surrogate_warning: "PBE PM-itinerant proxy (D-20)" }
+magnetic: { state: NM, collinear: true, magmoms_uB: {}, surrogate_warning: "PBE PM-itinerant proxy" }
 
 environment: { phase: aqueous_at_solid_interface, T: 300 K, pH: implied_~0, redox: null }
 
@@ -44,12 +42,12 @@ calculation:
 # ── 6. BENCHMARK SETUP (NEW SECTION) ─────────────────────
 benchmark_setup:
   reference:
-    method: "DFT WT-MetaD (CP2K, W2 v1)"
+    method: "DFT WT-MetaD (CP2K)"
     code:   CP2K
     system: "mack 3×3×1 + 12 H2O + H+"
     ref:    "tm.mack_3x3x1.h_proton.metad_v1.2026-04-30"   # paired pilot
   test_systems:
-    - { id: w2_us_setup_3x3x1, system: "mack 3×3×1 + 12 H2O + H+", windows: 18, duration_ps: 9 }
+    - { id: us_setup_3x3x1, system: "mack 3×3×1 + 12 H2O + H+", windows: 18, duration_ps: 9 }
   test_observables:
     - "PMF saddle ΔF# (eV)"
     - "PMF basin position (Å, d_FeH)"
@@ -67,7 +65,7 @@ metrics:
   frac_correct_basin:
     MACE_pre_flight:   0.966                         # 5 ps NVT @ 300 K, Fe-chemi fraction
     CHGNet_pre_flight: 0.998
-    DFT_v1_reference:  1.000                          # 14 ps from s121
+    DFT_v1_reference:  1.000                          # 14 ps DFT reference
   saddle_position_A:
     MACE:    2.23
     CHGNet:  2.41
@@ -116,10 +114,9 @@ provenance:
   parents:
     - "tm.mack_3x3x1.h_proton.us_pmf.2026-05-06"        # MACE+CHGNet US runs
     - "tm.mack_3x3x1.h_proton.metad_v1.2026-04-30"       # DFT reference
-  decisions: ["DECISION-091"]                              # US apples-to-apples protocol
   literature: ["Kumar1992_WHAM"]
   compute:
-    host: gomer
+    host: gpu-host
     gpu: RTX 4070 12 GB
     cost_usd: 0.0
     walltime_h: 9.13                                      # MLIP US sequential

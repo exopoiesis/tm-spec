@@ -10,7 +10,7 @@ is bumped independently — see `docs/specification/`.
 
 ### Planned (v0.4+)
 - Recipe registry hooks (`recipe:` block).
-- Lotsman runtime integration (`Marina.execute(yaml, host)` round-trip).
+- Orchestrator runtime integration (`runtime.execute(yaml, host)` round-trip).
 - AiiDA bridge (`tm-spec → aiida-archive`).
 - QCSchema interop layer.
 
@@ -127,17 +127,17 @@ implementation tagged 0.1.0.
   `tm_spec.yaml` + `README.md` + `raw/` and top-level `nomad.yaml`.
 
 ### Examples
-- `examples/pyr_smoke.tm.yaml` — pyrite V_S+H_i NEB smoke (s128, $4, PASS).
+- `examples/pyr_smoke.tm.yaml` — pyrite V_S+H_i NEB smoke (PASS).
 - `examples/mack_vfe_neb.tm.yaml` — mackinawite V_Fe+H_i NEB production
-  (s133, $47, PASS, paper-quotable).
+  (PASS, paper-quotable).
 - `examples/w2_us_pmf.tm.yaml` — mackinawite umbrella sampling PMF
-  (MACE+CHGNet apples-to-apples, s136, PASS).
+  (MACE+CHGNet apples-to-apples, PASS).
 - `examples/w2_metad.tm.yaml` — mackinawite well-tempered MetaD CP2K
-  (s121-s136, $181, PRELIMINARY/lower_bound_only).
+  (PRELIMINARY/lower_bound_only).
 - `examples/w1_grotthuss_aimd.tm.yaml` — mackinawite + 12 H₂O AIMD
-  (s107-s136 RUNNING).
+  (RUNNING).
 - `examples/w2_mlip_benchmark.tm.yaml` — MACE-MP-0 vs CHGNet vs DFT
-  cross-validation (s136, T6 deliverable).
+  cross-validation.
 
 ### Licensing
 

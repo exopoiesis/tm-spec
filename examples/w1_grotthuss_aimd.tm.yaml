@@ -1,12 +1,10 @@
-# Pilot TM-Spec artefact #5: W1 CP2K AIMD bulk Grotthuss
-# Real session: s107-s136 (RUNNING). 3×3×2 mack + 12 H2O + H+ explicit.
-# Source: knowledge/handoffs/SESSION_HANDOFF_2026-05-06_s136.md (W1 step 16700+/20000, ETA ~3-4 days)
-#         + paper §5b (bulk Grotthuss reference for two-regime narrative)
+# Pilot TM-Spec artefact #5: CP2K AIMD bulk Grotthuss
+# 3×3×2 mack + 12 H2O + H+ explicit.
 # Status: [DRAFT v0.2 — RUNNING, status PRELIMINARY until completion]
 #
 # *** NEW kind: MDCalculation ***
 # Plain MD (NVT-Nose), NOT enhanced sampling.
-# W2 metadyn (kind: MetaDynCalculation) and W2 US (kind: USCalculation) build on top of this trajectory.
+# Metadynamics (kind: MetaDynCalculation) and US (kind: USCalculation) build on top of this trajectory.
 
 spec: tm-spec/0.2
 kind: MDCalculation
@@ -39,13 +37,13 @@ defects:
 
 # ── 3. MAGNETIC STATE ────────────────────────────────────
 magnetic:
-  state: NM                                    # nspin=1 PM/itinerant surrogate (D-20)
+  state: NM                                    # nspin=1 PM/itinerant surrogate
   collinear: true
   propagation_vector: [0, 0, 0]
   magmoms_uB: {}
   surrogate_warning: |
-    PBE nspin=1 as PM/itinerant proxy at 300 K (Q-115 DECISION-079).
-    Community-validated (Q115_NOMAD_BENCHMARKS.md, D-20).
+    PBE nspin=1 as PM/itinerant proxy at 300 K.
+    Community-validated.
 
 # ── 4. ENVIRONMENT ───────────────────────────────────────
 environment:
@@ -111,16 +109,16 @@ trajectory_analysis:
     H_proton_msd_A2_per_ps: 3.0                   # ~3-5 typical (bulk water D_H+ ~1-2e-4 cm²/s)
     target_ps_window: [1.0, 8.0]
   diffusion_coefficient_cm2_per_s:
-    H_proton: 1.5e-4                              # D_H+ post-W1_VERIFICATION s130 (verified 1.5-2e-4)
-  grotthuss_hops_per_ps: 3.0                      # ~3 observed in W1 v1 11.5 ps trajectory
+    H_proton: 1.5e-4                              # D_H+ verified 1.5-2e-4
+  grotthuss_hops_per_ps: 3.0                      # ~3 observed in 11.5 ps trajectory
   hbond_lifetime_ps: 0.5                          # ~0.5 H2O-H2O typical
   speciation_fractions:
     Eigen_H3O_plus: 0.5                           # approx
-    Zundel_H5O2_plus: 0.5                         # approx; W1_VERIFICATION 17-50% Zundel range
+    Zundel_H5O2_plus: 0.5                         # approx; 17-50% Zundel range
 
 # ── 9. RESULTS ──────────────────────────────────────────
 results:
-  completed_ps: 8.35                              # 16700 / 20000 × 10 ps (s136)
+  completed_ps: 8.35                              # 16700 / 20000 × 10 ps
   T_mean_K: 302.5
   T_drift_K_per_ps: 0.5                            # within phase 3 production target
   energy_drift_meV_per_ps: 0.6                     # acceptable (<1 meV/ps target)
@@ -129,19 +127,19 @@ results:
     avg_OH_OH_distance_A: 2.6
   status: PRELIMINARY                               # RUNNING, will become PASS at 20000 steps
   paper_quotable: true                              # partial trajectory quotable for §5b reference
-  validated_by: [chemist@opus, physicist@opus, math_audit_s130]
+  validated_by: [chemist@opus, physicist@opus]
   notes: |
     Bulk Grotthuss reference for two-regime narrative (paper §C).
-    In 3×3×1 mack (W2 metad) Fe-chemi traps H+ for >>kT (kinetic trap).
-    In 3×3×2 mack (W1, this) bulk water Grotthuss network active → low Ea.
+    In 3×3×1 mack Fe-chemi traps H+ for >>kT (kinetic trap).
+    In 3×3×2 mack (this) bulk water Grotthuss network active → low Ea.
     Continue to 20000 steps for converged D_H+ and Zundel fraction.
 
 # ── 10. SANITY GATES ─────────────────────────────────────
 sanity:
   - { id: G01_FeS_bond,            rule: "min(Fe–S) > 2.00 Å",                                pass: true }
   - { id: G06_ascii_safe,          rule: "no em-dash in script",                              pass: true }
-  - { id: G21_phase1_no_hot_start, rule: "T_mean steps 1-10 < 320 K (s107 lesson)",            pass: true }
-  - { id: G22_phase2_no_T_drift,   rule: "|T_slope| < 5 K/ps over 1 ps (F-045 lesson)",        pass: true }
+  - { id: G21_phase1_no_hot_start, rule: "T_mean steps 1-10 < 320 K",                          pass: true }
+  - { id: G22_phase2_no_T_drift,   rule: "|T_slope| < 5 K/ps over 1 ps",                       pass: true }
   - { id: G23_hill_units_explicit, rule: "no hills (plain MD); WW skip",                       pass: skip }
   - { id: G25_energy_drift,        rule: "Cons.Qty drift < 1 meV/ps",                          observed: 0.6, pass: true }
   - { id: G26_T_window,            rule: "T_mean within ±10% of T_target=300",                 observed: 302.5, pass: true }
@@ -150,14 +148,12 @@ sanity:
 provenance:
   date: 2026-04-13
   author: igor@exopoiesis.space
-  parents: ["s107.cp2k_aimd_initial.2026-04-13"]
-  decisions: [Q-115_protocol, DECISION-079]
+  parents: ["run.cp2k_aimd_initial.2026-04-13"]
   literature: [Marx2006_GrotthussSurvey, Tuckerman2010_CompactBookCH4]
   compute:
-    host: vast-W1
-    instance: 35201165
+    host: cloud-gpu
     gpu: A100 PCIe 40G
-    cost_usd: 60.0                                  # cumulative through s136
+    cost_usd: 60.0
     walltime_h: 240                                  # ~10 days continuous
   hash:
     inputs:  sha256:placeholder_to_be_computed

@@ -1,9 +1,6 @@
 # Pilot TM-Spec artefact: mackinawite V_Fe + 2·H_int NEB
-# Real session: s133 (2026-05-04). Cost: $47.30. PASS, paper-quotable.
-# Source: knowledge/handoffs/SESSION_HANDOFF_2026-05-04_s133.md
-#         + S133_LESSONS.md
-# Bind: infra/gpu_scripts/neb_canonical_mack_136at_qe_VFe.py
-# Status: [DRAFT v0.2 — numbers from session log, not recomputed]
+# PASS, paper-quotable.
+# Status: [DRAFT v0.2 — numbers from a prior campaign log, not recomputed]
 
 spec: tm-spec/0.2
 kind: NEBCalculation
@@ -16,7 +13,7 @@ structure:
   prototype: AB_tP4_129_a_c     # AFLOW: mackinawite tetragonal P4/nmm
   space_group: { number: 129, symbol: P4/nmm }
   cell:
-    a: 3.674  Å                  # primitive (matches real script build_mackinawite)
+    a: 3.674  Å                  # primitive
     c: 5.033  Å
     gamma: 90 deg
   wyckoff:
@@ -45,7 +42,7 @@ magnetic:
   magmoms_uB:
     Fe[top_layer]:    +3.5
     Fe[bottom_layer]: -3.5
-  surrogate_warning: "PBE AFM-G as PM/itinerant proxy at 363 K (mackinawite is PM at 298 K experimentally; see knowledge/MAGNETIC_PREFILTER.md)"
+  surrogate_warning: "PBE AFM-G as PM/itinerant proxy at 363 K (mackinawite is PM at 298 K experimentally)"
 
 # ── 4. ENVIRONMENT (PHREEQC-style) ───────────────────────
 environment:
@@ -81,11 +78,11 @@ calculation:
     basis: { kind: plane_waves, cutoff_Ry: 60, rho_cutoff_Ry: 240 }   # script default
     pseudopotential: ONCV-SR PBE Pseudo Dojo nc-sr-04
     smearing: { kind: gaussian, width_Ry: 0.005 }                       # mack VFe odd electrons
-    # NOMAD/LibXC interop (D-03)
+    # NOMAD/LibXC interop
     xc_libxc: [GGA_X_PBE, GGA_C_PBE]
     vdw: D3-BJ
-    spin: none                                                            # nspin=1 (D-20 Q-115)
-    # hubbard: omitted — U=0 mainstream per Q115_NOMAD_BENCHMARKS.md (D-20)
+    spin: none                                                            # nspin=1
+    # hubbard: omitted — U=0 mainstream per the project DFT protocol
   k_points: { mesh: [2, 2, 2], shift: [0, 0, 0] }   # 3×3×2 supercell, ~6×6×4 effective
   convergence:
     scf_Ry:        1.0e-8
@@ -109,8 +106,8 @@ workflow:
   fmax_eV_per_A: 0.05
   k_spring_eV_per_A2: 0.3                       # script default
   reuse_relaxed: true
-  prewrap: idpp                              # Q-115 erratum #5: MANDATORY
-  paired_script: infra/gpu_scripts/neb_canonical_mack_72at_qe_VFe.py
+  prewrap: idpp                              # protocol erratum #5: MANDATORY
+  paired_script: scripts/neb_canonical_mack_72at_qe_VFe.py
 
 # ── 8. RESULTS ───────────────────────────────────────────
 results:
@@ -123,7 +120,7 @@ results:
   paper_quotable: true
   validated_by: [chemist@opus, physicist@opus]
   notes: |
-    Overnight DFT NEB SUCCESS, 7 /loop wakeups (s133).
+    Overnight DFT NEB SUCCESS.
     Initial smoke had 28 eV bug, fixed → 0.164 → 0.043 eV after full NEB.
 
 # ── 9. SANITY GATES ──────────────────────────────────────
@@ -133,9 +130,9 @@ sanity:
   - { id: G03_endpoints_distinct, rule: "ΔR_H > 0.5 Å AND Δnearest_Fe identity",           observed: "ΔR=1.83 Å + identity flip",  pass: true }
   - { id: G04_fmax_endpoints,     rule: "fmax(A,B) ≤ fmax_target",                          observed: [0.039, 0.041],               pass: true }
   - { id: G05_scf_converged,      rule: "all images SCF OK",                                pass: true }
-  - { id: G06_ascii_safe,         rule: "no em-dash in script (Vast.ai ASCII)",             pass: true }
+  - { id: G06_ascii_safe,         rule: "no em-dash in script (ASCII-only container)",      pass: true }
   - { id: G07_singleton_lock,     rule: "lockfile present, no race",                        pass: true }
-  - { id: G08_idpp_prewrap,       rule: "Q-115 erratum #5: idpp prewrap applied",           pass: true }
+  - { id: G08_idpp_prewrap,       rule: "protocol erratum #5: idpp prewrap applied",        pass: true }
 
 # ── 10. PROVENANCE ───────────────────────────────────────
 provenance:
@@ -143,11 +140,9 @@ provenance:
   author: igor@exopoiesis.space
   parents:
     - tm.mack.vfe.hint.smoke@2026-05-03
-    - Q-115@2026-04-28
-  decisions: [DECISION-077, DECISION-080]
   literature: [Vaughan1971, Wang2025_pyrite, Qiu2025_neb]
   compute:
-    host: vast-W3
+    host: cloud-gpu
     gpu: 2×Blackwell
     cost_usd: 47.30
     walltime_h: 18.4
