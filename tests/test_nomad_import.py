@@ -35,7 +35,9 @@ def test_archive_to_tm_spec_singlepoint_validates(fixtures_dir: Path) -> None:
     assert doc["results"]["energy_eV"] == -1000.0
     assert doc["results"]["band_gap_eV"] == 0.8
 
-    # v0.3: single point -> dft_static, surfaced via the G09 sanity gate.
+    # v0.3: single point -> dft_static, set DIRECTLY on structure.geometry_origin
+    # (the cleaner home for single-calc imports) AND mirrored in the G09 gate.
+    assert doc["structure"]["geometry_origin"] == "dft_static"
     g09 = _gate(doc, "G09_geometry_origin")
     assert g09 is not None
     assert g09["observed"] == "dft_static"
@@ -60,7 +62,8 @@ def test_archive_to_tm_spec_relax_validates(fixtures_dir: Path) -> None:
     assert doc["results"]["final_energy_eV"] == -8.0
     assert doc["results"]["converged"] is True
 
-    # v0.3: relaxation -> dft_relaxed, surfaced via the G09 sanity gate.
+    # v0.3: relaxation -> dft_relaxed, on structure.geometry_origin AND the G09 gate.
+    assert doc["structure"]["geometry_origin"] == "dft_relaxed"
     g09 = _gate(doc, "G09_geometry_origin")
     assert g09 is not None
     assert g09["observed"] == "dft_relaxed"
@@ -79,6 +82,7 @@ def test_geometry_origin_mlip_relaxed(fixtures_dir: Path) -> None:
     assert doc["spec"] == "tm-spec/0.3"
     assert doc["calculation"]["method"] == "MLIP"
 
+    assert doc["structure"]["geometry_origin"] == "mlip_relaxed"
     g09 = _gate(doc, "G09_geometry_origin")
     assert g09 is not None
     assert g09["observed"] == "mlip_relaxed"

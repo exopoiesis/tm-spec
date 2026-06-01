@@ -504,6 +504,17 @@
         },
         "chemical_formula_anonymous": {
           "type": "string"
+        },
+        "geometry_origin": {
+          "enum": [
+            "dft_relaxed",
+            "dft_static",
+            "mlip_relaxed",
+            "experimental",
+            "as_built",
+            "unknown"
+          ],
+          "description": "How this single structure's geometry was obtained (method x relaxation), mirroring endpoint.geometry_origin. Surfaced via gate G09_geometry_origin (docs/gate-registry.md). For NEB use endpoint-level geometry_origin (one per endpoint, energies comparable only across dft_relaxed); for single-structure docs (SinglePoint/Relax imports) prefer this structure-level field. Energy comparisons are valid only for dft_relaxed; an mlip_relaxed geometry can carry tens of eV of unrelaxed-lattice error even when local bond lengths look physical."
         }
       }
     },

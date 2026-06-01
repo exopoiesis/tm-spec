@@ -563,6 +563,15 @@ def archive_to_tm_spec(
     calculation = _calculation_block(archive)
     geometry_origin = _geometry_origin(archive, kind)
 
+    # v0.3: record the imported geometry's origin DIRECTLY on the structure block
+    # (structure.geometry_origin, added to $defs.structure in 0.3). This is the
+    # cleaner home for a single-calc import than the G09 sanity gate workaround
+    # below: a SinglePoint/Relax doc has no `endpoint` block, so the structure-level
+    # field is the natural place. We ALSO keep the G09 sanity gate (it is valid and
+    # is what prodromos reads as the gate-vocabulary signal), so the doc stays both
+    # readable by the planner and self-describing at the structure level.
+    structure["geometry_origin"] = geometry_origin
+
     scf_observed = _scf_converged(archive)
     sanity_gates: list[dict[str, Any]] = [
         {
@@ -577,10 +586,10 @@ def archive_to_tm_spec(
             "pass":     "skip",
         },
         # v0.3: surface the imported geometry's origin via the shared gate
-        # vocabulary (docs/gate-registry.md G09_geometry_origin). SinglePoint /
-        # Relax docs have no `endpoint` block, so the schema-valid home for the
-        # origin is this sanity gate rather than a fabricated structure field.
-        # An mlip_relaxed origin is a `warn` (energy comparisons need care);
+        # vocabulary (docs/gate-registry.md G09_geometry_origin). The PRIMARY home
+        # is now structure.geometry_origin (set above); this sanity gate is kept
+        # in addition because it carries the gate-vocabulary verdict prodromos
+        # reads. An mlip_relaxed origin is a `warn` (energy comparisons need care);
         # dft_relaxed/dft_static pass; unknown is skipped.
         {
             "id":       "G09_geometry_origin",

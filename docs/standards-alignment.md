@@ -640,6 +640,17 @@ export alias onto emmet `run_type × task_type` and NOMAD
 `electronic_structure_method`. Energy comparisons across endpoints are valid
 only for `dft_relaxed`.
 
+> **Update 2026-06-02 (additive, still 0.3):** `geometry_origin` is now also
+> available on `structure` (`$defs.structure.properties.geometry_origin`, same
+> enum). Rationale: a NEB doc has one geometry **per endpoint** (endpoint-level
+> is preferred there), but a single-structure doc — `SinglePointCalculation` /
+> `RelaxCalculation`, e.g. a NOMAD import — has no `endpoint` block, so its
+> origin belongs on `structure.geometry_origin`. The NOMAD importer now writes
+> `structure.geometry_origin` directly (previously it could only record the
+> origin in the `G09_geometry_origin` sanity gate, a workaround). The G09 gate
+> is still emitted because it carries the gate-vocabulary verdict the prodromos
+> planner reads. Same enum, same `G09_geometry_origin` gate, no version bump.
+
 ### (b) `preflight`
 
 `preflight` is a **predictive** pre-flight assessment produced BEFORE the
