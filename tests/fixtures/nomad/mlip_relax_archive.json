@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "entry_id": "mlip_relax_0001",
+    "upload_id": "upload_mlip_demo",
+    "entry_create_time": "2026-05-10T11:00:00+00:00"
+  },
+  "workflow2": {
+    "name": "GeometryOptimization",
+    "geometry_optimization": {
+      "type": "FIRE",
+      "convergence_tolerance_force_maximum": 8.01088317e-11,
+      "optimization_steps_maximum": 200,
+      "is_converged_geometry": true
+    }
+  },
+  "results": {
+    "material": {
+      "chemical_formula_descriptive": "Fe4S4",
+      "chemical_formula_reduced": "FeS",
+      "chemical_formula_anonymous": "AB",
+      "symmetry": {
+        "space_group_number": 1,
+        "space_group_symbol": "P1"
+      }
+    },
+    "method": {
+      "method_name": "MLIP",
+      "simulation": {
+        "program_name": "MACE",
+        "program_version": "0.3.6",
+        "dft": {
+          "basis_set_type": "ML potential",
+          "spin_polarized": false
+        }
+      }
+    }
+  },
+  "run": [
+    {
+      "program": {
+        "name": "MACE",
+        "version": "0.3.6"
+      },
+      "calculation": [
+        {
+          "energy": {
+            "total": {
+              "value": -1.602176634e-18
+            }
+          },
+          "scf_iteration": [
+            { "energy_total": -1.60e-18 }
+          ]
+        }
+      ]
+    }
+  ]
+}

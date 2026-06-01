@@ -42,6 +42,15 @@ validator selects schema by the doc's `spec:` field
 ### Reference implementation
 - Validator: `SPEC_VERSION = "0.3"`, `SUPPORTED_VERSIONS = ("0.1", "0.2",
   "0.3")`. Schema auto-selection by `spec:` field unchanged.
+- NOMAD importer (`import-nomad` / `import-nomad-batch`) now emits
+  `spec: tm-spec/0.3` (and the `0.3.json` `schema_url`). It records the
+  imported geometry's origin via a `G09_geometry_origin` sanity gate
+  (shared gate vocabulary): geometry optimisation → `dft_relaxed`,
+  single point → `dft_static`, an ML/MLIP method → `mlip_relaxed`
+  (non-blocking `warn`), otherwise `unknown`. Imported docs remain
+  prodromos-ready — they carry `structure.formula` (element counts for
+  `G11_electron_parity` / `G19_external_reference`) and
+  `calculation.level` (xc / basis / spin provenance).
 
 ### Examples
 - `examples/preflight_example.tm.yaml` — NEBCalculation demonstrating

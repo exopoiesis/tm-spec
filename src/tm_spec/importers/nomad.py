@@ -79,6 +79,18 @@ _WORKFLOW_TO_KIND: dict[str, str] = {
     "Elastic":               "SinglePointCalculation",  # multiple SP as one entry
 }
 
+# Map a TM-Spec ``kind`` (plus method hint) onto a ``geometry_origin`` value
+# from the v0.3 ``$defs.endpoint.geometry_origin`` enum. A NOMAD entry that was
+# relaxed gives a relaxed geometry; a single-point gives a static one; an entry
+# whose method is machine-learning gives an MLIP-relaxed geometry. Anything we
+# can't classify is ``unknown`` (never fabricated as ``dft_relaxed``).
+_KIND_TO_GEOMETRY_ORIGIN: dict[str, str] = {
+    "RelaxCalculation":       "dft_relaxed",
+    "SinglePointCalculation": "dft_static",
+    # MD frames are time-evolved snapshots, not an optimised endpoint.
+    "MDCalculation":          "unknown",
+}
+
 # Conversion factor: NOMAD stores energies in joules; TM-Spec uses eV.
 _J_PER_EV = 1.602176634e-19
 
@@ -279,6 +291,50 @@ def _detect_kind(archive: dict[str, Any]) -> str:
     return "SinglePointCalculation"
 
 
+def _is_mlip_method(archive: dict[str, Any]) -> bool:
+    """True if the NOMAD method looks like a machine-learning potential.
+
+    A geometry relaxed (or evaluated) with an MLIP must NOT be tagged
+    ``dft_relaxed`` — an MLIP geometry can carry tens of eV of unrelaxed-
+    lattice error (see v0.3 ``geometry_origin`` rationale and gate
+    ``G09_geometry_origin``). We check the same signals used by
+    ``_calculation_block``.
+    """
+    method = _g(archive, "results", "method") or {}
+    method_name = str(method.get("method_name", ""))
+    if "MLIP" in method_name or "machine learning" in method_name.lower():
+        return True
+    # NOMAD ``electronic_structure_method`` / workflow ``method=ML``.
+    esm = _g(archive, "results", "method", "method_name")
+    if isinstance(esm, str) and esm.strip().upper() == "ML":
+        return True
+    return False
+
+
+def _geometry_origin(archive: dict[str, Any], kind: str) -> str:
+    """Map a NOMAD entry onto a v0.3 ``geometry_origin`` enum value.
+
+    Mapping (NOMAD workflow/task type x method -> enum):
+
+      * geometry optimisation / relaxation  -> ``dft_relaxed``
+      * single point / static               -> ``dft_static``
+      * any of the above but method=ML/MLIP -> ``mlip_relaxed``
+      * MD frame / unclassified             -> ``unknown``
+
+    The ML check takes precedence over the relax/static split: an MLIP
+    geometry is recorded as ``mlip_relaxed`` regardless of whether NOMAD
+    flagged it as a relaxation, because the energy-comparison caveat is the
+    same (gate ``G09_geometry_origin``).
+    """
+    if _is_mlip_method(archive):
+        # Only relax/single-point produce a usable endpoint geometry; an MLIP
+        # MD frame stays ``unknown``.
+        if kind in ("RelaxCalculation", "SinglePointCalculation"):
+            return "mlip_relaxed"
+        return "unknown"
+    return _KIND_TO_GEOMETRY_ORIGIN.get(kind, "unknown")
+
+
 def _structure_block(archive: dict[str, Any]) -> dict[str, Any]:
     """Build TM-Spec ``structure`` block from NOMAD ``results.material``."""
     mat = _g(archive, "results", "material") or {}
@@ -469,7 +525,7 @@ def archive_to_tm_spec(
 ) -> dict[str, Any]:
     """Pure transformation: NOMAD archive dict → TM-Spec doc dict.
 
-    The output is always valid against schema 0.2 for the chosen kind
+    The output is always valid against schema 0.3 for the chosen kind
     *if* the archive has the expected NOMAD shape. Missing fields are
     omitted (the validator will complain about anything truly required
     that we couldn't fill).
@@ -505,18 +561,36 @@ def archive_to_tm_spec(
 
     structure = _structure_block(archive)
     calculation = _calculation_block(archive)
+    geometry_origin = _geometry_origin(archive, kind)
 
+    scf_observed = _scf_converged(archive)
     sanity_gates: list[dict[str, Any]] = [
         {
             "id":       "G05_scf_converged",
             "rule":     "NOMAD parser reports at least one converged SCF step",
-            "observed": _scf_converged(archive),
-            "pass":     bool(_scf_converged(archive)) if _scf_converged(archive) is not None else "skip",
+            "observed": scf_observed,
+            "pass":     bool(scf_observed) if scf_observed is not None else "skip",
         },
         {
             "id":       "G06_ascii_safe",
             "rule":     "ASCII-only doc body (NOMAD entries are non-ASCII tolerant on import)",
             "pass":     "skip",
+        },
+        # v0.3: surface the imported geometry's origin via the shared gate
+        # vocabulary (docs/gate-registry.md G09_geometry_origin). SinglePoint /
+        # Relax docs have no `endpoint` block, so the schema-valid home for the
+        # origin is this sanity gate rather than a fabricated structure field.
+        # An mlip_relaxed origin is a `warn` (energy comparisons need care);
+        # dft_relaxed/dft_static pass; unknown is skipped.
+        {
+            "id":       "G09_geometry_origin",
+            "rule":     "geometry_origin is dft_relaxed/dft_static, not an MLIP geometry",
+            "observed": geometry_origin,
+            "pass":     (
+                "warn" if geometry_origin == "mlip_relaxed"
+                else "skip" if geometry_origin == "unknown"
+                else True
+            ),
         },
     ]
 
@@ -550,10 +624,10 @@ def archive_to_tm_spec(
     scf_ok      = _scf_converged(archive)
 
     doc: dict[str, Any] = {
-        "spec":        "tm-spec/0.2",
+        "spec":        "tm-spec/0.3",
         "kind":        kind,
         "id":          doc_id,
-        "schema_url":  "https://exopoiesis.github.io/tm-spec/0.2.json",
+        "schema_url":  "https://exopoiesis.github.io/tm-spec/0.3.json",
         "structure":   structure,
         "calculation": calculation,
         "sanity":      sanity_gates,

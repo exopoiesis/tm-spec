@@ -60,7 +60,9 @@ tm-spec validate --all examples --strict
 # extract a stub from an ASE/QE/CP2K script
 tm-spec extract path/to/neb_canonical.py --out tmp/stub.tm.yaml
 
-# import a public NOMAD archive entry
+# import a public NOMAD archive entry (emits spec: tm-spec/0.3 with a
+# G09_geometry_origin gate: dft_relaxed for relaxations, dft_static for
+# single points, mlip_relaxed for ML methods; prodromos-ready out of the box)
 tm-spec import-nomad <entry_id> --out imported.tm.yaml
 
 # diff a hand-crafted pilot against its paired script
