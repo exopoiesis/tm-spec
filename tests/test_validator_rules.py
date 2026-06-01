@@ -133,8 +133,9 @@ def test_unique_gate_ids_silent(minimal_neb_doc) -> None:
 # ── End-to-end: minimal doc passes the full validator ─────────────────────
 
 
-def test_minimal_doc_passes_full_validation(minimal_neb_doc, schema) -> None:
-    schema_errs, rule_issues = validate_doc(minimal_neb_doc, schema)
+def test_minimal_doc_passes_full_validation(minimal_neb_doc) -> None:
+    # schema auto-selected from the doc's own spec field.
+    schema_errs, rule_issues = validate_doc(minimal_neb_doc)
     err_msgs = [m for lvl, m in rule_issues if lvl == "error"]
     assert not schema_errs, schema_errs
     assert not err_msgs, err_msgs

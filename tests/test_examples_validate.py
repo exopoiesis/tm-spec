@@ -24,13 +24,16 @@ from tm_spec import validate_doc
         "w2_mlip_benchmark.tm.yaml",
         "nomad_pyrite_singlepoint.tm.yaml",
         "nomad_relax_example.tm.yaml",
+        "preflight_example.tm.yaml",
     ],
 )
-def test_example_passes_schema(examples_dir: Path, name: str, load_yaml, schema) -> None:
+def test_example_passes_schema(examples_dir: Path, name: str, load_yaml) -> None:
     path = examples_dir / name
     assert path.exists(), f"missing example: {path}"
     doc = load_yaml(path)
-    schema_errs, rule_issues = validate_doc(doc, schema)
+    # schema auto-selected from the doc's own spec field (additive bumps:
+    # examples may legitimately stay on an earlier supported version).
+    schema_errs, rule_issues = validate_doc(doc)
 
     error_issues = [m for level, m in rule_issues if level == "error"]
     assert not schema_errs, f"{name} schema errors: {schema_errs}"
@@ -46,16 +49,29 @@ def test_all_examples_have_required_top_level(all_examples, load_yaml) -> None:
         assert not missing, f"{path.name} missing required fields: {missing}"
 
 
-def test_all_examples_use_current_spec_version(all_examples, load_yaml) -> None:
-    """All shipped examples should declare the current spec version."""
-    from tm_spec import SPEC_VERSION
+def test_all_examples_declare_supported_spec_version(all_examples, load_yaml) -> None:
+    """Every shipped example must declare a supported spec version.
 
-    expected = f"tm-spec/{SPEC_VERSION}"
+    Spec bumps are additive: older examples legitimately keep their
+    authored ``spec:`` version (e.g. ``tm-spec/0.2``) and remain valid,
+    because the validator selects the schema from each doc's ``spec:``
+    field. At least one example must exercise the current version.
+    """
+    from tm_spec import SPEC_VERSION, SUPPORTED_VERSIONS
+
+    supported = {f"tm-spec/{v}" for v in SUPPORTED_VERSIONS}
+    current = f"tm-spec/{SPEC_VERSION}"
+    seen: set[str] = set()
     for path in all_examples:
         doc = load_yaml(path)
-        assert doc["spec"] == expected, (
-            f"{path.name} declares spec={doc['spec']!r}, expected {expected!r}"
+        assert doc["spec"] in supported, (
+            f"{path.name} declares spec={doc['spec']!r}, "
+            f"not in supported {sorted(supported)}"
         )
+        seen.add(doc["spec"])
+    assert current in seen, (
+        f"no example exercises the current spec version {current!r}"
+    )
 
 
 def test_all_examples_have_unique_ids(all_examples, load_yaml) -> None:

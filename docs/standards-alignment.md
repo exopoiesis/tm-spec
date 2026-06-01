@@ -599,6 +599,75 @@ calculation:
 
 ---
 
+## 12. TM-Spec v0.3 additions (geometry_origin, preflight)
+
+> Added 2026-06-01 for the v0.3 additive bump. Both additions were checked
+> against the standards already surveyed above; neither imports a single
+> scalar field, so both export rather than import.
+
+### (a) `endpoint.geometry_origin`
+
+There is no single scalar field in the surveyed standards that records "how
+this geometry was obtained" as a `(method × relaxation)` shortcut. The
+closest constructs are combinations or structural conventions, so
+`geometry_origin` is a human shortcut (in the spirit of `magnetic.state`)
+with an export alias onto emmet / NOMAD.
+
+| TM-Spec value | emmet `run_type × task_type` | NOMAD / QCSchema | Decision |
+|---|---|---|---|
+| `dft_relaxed` | `"<XC> Structure Optimization"` (CalcType = `f"{run_type} {task_type}"`) [FACT] | electronic_structure_method = `DFT` [CLAIM] | **export alias** to emmet CalcType |
+| `dft_static` | `"<XC> Static"` [FACT] | electronic_structure_method = `DFT` [CLAIM] | **export alias** to emmet CalcType |
+| `mlip_relaxed` | emmet is VASP/DFT-only — no MLIP task_type [FACT] | NOMAD `electronic_structure_method` enum includes `ML` [CLAIM] | **export** to NOMAD `method=ML`; no emmet target |
+| `experimental` / `as_built` / `unknown` | no equivalent | no equivalent | **keep — original TM-Spec semantics** |
+
+Notes:
+- **emmet** `RunType` / `TaskType` / `CalcType` are VASP/DFT-only;
+  `CalcType = f"{run_type} {task_type}"` [FACT, `emmet.core.vasp.calc_types.enums`].
+  There is no MLIP `TaskType`, so `mlip_relaxed` has no emmet target.
+- **QCSchema** expresses "final optimized geometry" *structurally* via
+  `OptimizationResult.final_molecule` (driver = `energy`/`gradient`/…),
+  not as a label [FACT]; its `provenance{creator,version,routine}` describes
+  the *software*, not the geometry.
+- **OPTIMADE 1.3** has no such property (trajectories are draft only) [CLAIM].
+- **Name clash [FACT]:** the top-level `provenance` block already means
+  *record authorship* (date / author / parents / compute — the
+  QCSchema / AiiDA sense). The per-endpoint field is therefore **not**
+  named `provenance`; it is `geometry_origin`. The corresponding gate is
+  `G09_geometry_origin` (see `gate-registry.md`).
+
+**Decision:** keep a human-shortcut enum `geometry_origin`; provide an
+export alias onto emmet `run_type × task_type` and NOMAD
+`electronic_structure_method`. Energy comparisons across endpoints are valid
+only for `dft_relaxed`.
+
+### (b) `preflight`
+
+`preflight` is a **predictive** pre-flight assessment produced BEFORE the
+expensive calculation. No surveyed standard has an equivalent: they are all
+retrospective or descriptive.
+
+| Standard | What it offers | Why it does not cover `preflight` |
+|---|---|---|
+| W3C PROV-O | provenance of things that happened | retrospective *by design*; a plan for a future run is out of scope [FACT] |
+| P-Plan (PROV extension) | models a workflow *template* (steps, variables) | describes a plan's structure, not a probabilistic GO / NO-GO verdict [CLAIM] |
+| RO-Crate | packages inputs/outputs/metadata | packs results, does not predict them [FACT] |
+| emmet / NOMAD / QCSchema / AiiDA | post-hoc status (`state`, `success`, `exit_status`, `process_state`) | only report what already ran; no pre-run probability or strategy tree [FACT] |
+
+Notes:
+- `preflight` is the forward-looking twin of the post-hoc `sanity` array
+  and is kept **original**, alongside `paper_quotable` and `validated_by`.
+- Only the engine sub-object is aligned: `engine{name, version, routine}`
+  maps onto QCSchema `provenance{creator, version, routine}`
+  (name → creator, version → version, routine → routine) [FACT].
+- A shared gate-ID registry — `sanity[]` and `preflight.gates[]` draw from
+  the same `^G\d{2}_*` vocabulary in `gate-registry.md` — is an **original
+  TM-Spec contribution** (one ID = one check, evaluated before *or* after).
+
+**Decision:** keep `preflight` original; align only `engine` onto QCSchema
+`provenance`; treat the shared gate-ID registry as a TM-Spec contribution.
+
+---
+
 ## Sources
 
 ### NOMAD Metainfo
@@ -623,6 +692,15 @@ calculation:
 - [QCElemental docs (Pydantic implementation)](https://molssi.github.io/QCElemental/)
 - [QCSchema overview at MolSSI](https://molssi.org/software/qcschema-2/)
 - [QCElemental procedures (OptimizationResult)](http://docs.qcarchive.molssi.org/projects/QCElemental/en/latest/_modules/qcelemental/models/procedures.html)
+- [QCSchema provenance object (creator/version/routine)](https://github.com/MolSSI/QCSchema/blob/master/qcschema/dev/definitions.py)
+- [QCElemental models (Provenance, OptimizationResult.final_molecule)](https://molssi.github.io/QCElemental/model_result.html)
+
+### W3C PROV-O / P-Plan (provenance, retrospective scope)
+- [W3C PROV-O: The PROV Ontology (Recommendation)](https://www.w3.org/TR/prov-o/) — retrospective provenance by design
+- [P-Plan ontology (plan structure extension of PROV)](http://purl.org/net/p-plan)
+
+### emmet calc-type enums
+- [emmet TaskType / RunType / CalcType enums (emmet.core.vasp.calc_types.enums)](https://github.com/materialsproject/emmet/blob/main/emmet-core/emmet/core/vasp/calc_types/enums.py)
 
 ### magCIF
 - [IUCr magnetic CIF dictionary browse (v0.9.8)](https://www.iucr.org/resources/cif/dictionaries/browse/cif_mag)

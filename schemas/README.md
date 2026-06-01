@@ -7,7 +7,8 @@ field MUST match a schema filename here.
 | Schema file | Spec version | Status | Notes |
 |-------------|--------------|--------|-------|
 | `0.1.json` | `tm-spec/0.1` | DRAFT legacy | Initial 11 kinds; 22 decisions D-01..D-22 |
-| `0.2.json` | `tm-spec/0.2` | DRAFT current | Adds `SinglePointCalculation`, `RelaxCalculation`, and NOMAD import provenance |
+| `0.2.json` | `tm-spec/0.2` | DRAFT legacy | Adds `SinglePointCalculation`, `RelaxCalculation`, and NOMAD import provenance |
+| `0.3.json` | `tm-spec/0.3` | DRAFT current | Adds `endpoint.geometry_origin` and an optional `preflight` block (predictive counterpart of `sanity`); shared gate registry in `docs/gate-registry.md` |
 
 ## Resolving by URL
 

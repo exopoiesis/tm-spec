@@ -1,0 +1,197 @@
+# Pilot TM-Spec artefact: V_S + H_i proton-hop NEB with an embedded
+# pre-flight assessment (v0.3 feature demo).
+#
+# This file shows the two v0.3 additions:
+#   (1) endpoint.geometry_origin on each NEB endpoint, and
+#   (2) an optional top-level `preflight:` block produced by an external
+#       predictive engine BEFORE the expensive NEB is launched.
+#
+# The `preflight` block is the forward-looking counterpart of the post-hoc
+# `sanity` array: both speak the same gate-ID vocabulary documented in
+# docs/gate-registry.md. `sanity` records what WAS checked after the run;
+# `preflight` records what an engine PREDICTED before committing compute.
+#
+# Status: [DRAFT v0.3 -- illustrative]
+
+spec: tm-spec/0.3
+kind: NEBCalculation
+id: tm.pyr.vs.hint.preflight.2026-06-01
+schema_url: https://exopoiesis.github.io/tm-spec/0.3.json
+
+# -- 1. STRUCTURE ----------------------------------------------------------
+structure:
+  formula: Fe32S63H1                         # 96-atom supercell: 1 V_S + 1 H_i
+  prototype: AB2_cP12_205_a_c                # AFLOW: pyrite cubic
+  space_group: { number: 205, symbol: Pa-3 }
+  cell:
+    a: 5.418  A
+    angles: "[90, 90, 90] deg"
+  wyckoff:
+    Fe@4a: [0.000, 0.000, 0.000]
+    S@8c:  [0.385, 0.385, 0.385]
+  supercell: [2, 2, 2]
+  pbc: [true, true, true]
+  ref: structures/pyr_96at_pristine.extxyz
+
+# -- 2. DEFECTS (Kroger-Vink) ----------------------------------------------
+defects:
+  reactions:
+    - "S_S^x -> V_S^.. + S(removed)"
+    - "nil   -> H_i^.  + e'"
+  charge_balance: |
+    V_S^.. + 2*e' (delocalized) + H_i^.  ->  net positive +1
+  population:
+    V_S:   { count: 1, conc: 1/64 }
+    H_int: { count: 1, conc: 1/64, site: vacancy_neighbour }
+
+# -- 3. MAGNETIC STATE -----------------------------------------------------
+magnetic:
+  state: NM                                  # pyrite is diamagnetic (low-spin Fe2+ d6)
+  collinear: true
+  propagation_vector: [0, 0, 0]
+  magmoms_uB: {}
+  surrogate_warning: null
+
+# -- 4. ENVIRONMENT --------------------------------------------------------
+environment:
+  phase: bulk_solid_with_vacancy_proton
+  T: 363.15 K
+  P: 100 bar
+  pH: 6.0
+  redox: { Eh: -0.40 V_SHE, pe: -6.8 }
+
+# -- 5. REACTION NETWORK ---------------------------------------------------
+reactions:
+  - id: R_VS_proton_hop
+    label: "V_S-mediated proton hop"
+    rule:  "H_i^.(site_A) + V_S^..(neighbour) -> H_i^.(site_B) + V_S^..(shifted)"
+    rate:  "TBD -- needs full NEB"
+    Ea_eV: null
+
+# -- 6. CALCULATION --------------------------------------------------------
+calculation:
+  method: DFT
+  level:
+    xc: PBE+D3(BJ)
+    basis: { kind: plane_waves, cutoff_Ry: 60, rho_cutoff_Ry: 240 }
+    pseudopotential: ONCV-SR PBE
+    smearing: { kind: gaussian, width_Ry: 0.005 }
+    xc_libxc: [GGA_X_PBE, GGA_C_PBE]
+    vdw: D3-BJ
+    spin: none
+  k_points: { mesh: [2, 2, 2], shift: [0, 0, 0] }
+  convergence:
+    scf_Ry:        1.0e-8
+    fmax_eV_per_A: 0.05
+  code:
+    name: QuantumESPRESSO
+    version: 7.3.1
+
+# -- 7. WORKFLOW (NEB) -----------------------------------------------------
+workflow:
+  kind: NEB
+  stage: production
+  endpoints:
+    A:
+      ref: artifacts/endA.extxyz
+      E_eV: -128055.5404
+      fmax: 0.027
+      BFGS_steps: 31
+      geometry_origin: dft_relaxed    # v0.3: geometry source (energies comparable)
+    B:
+      ref: artifacts/endB.extxyz
+      E_eV: -128055.5402
+      fmax: 0.026
+      BFGS_steps: 32
+      geometry_origin: dft_relaxed    # v0.3: both endpoints DFT-relaxed -> energies comparable
+  n_images: 7
+  optimizer: BFGS
+  fmax_eV_per_A: 0.05
+  k_spring_eV_per_A2: 1.5
+  prewrap: idpp
+  paired_script: scripts/neb_pyr_96at.py
+
+# -- 8. PRE-FLIGHT ASSESSMENT (v0.3, predictive, optional) -----------------
+# Produced by an external engine BEFORE the run. Same gate vocabulary as
+# `sanity` below (see docs/gate-registry.md). This is a prediction, not a
+# measurement.
+preflight:
+  engine:
+    name: prodromos
+    version: "0.1.0"
+  verdict: GO
+  confidence: high
+  plan_graph_version: "2026-06-01"
+  gates:
+    - id: G03_endpoints_distinct
+      verdict: ASYMMETRIC
+      confidence: high
+      p_success: 0.92
+      reasons:
+        - "Endpoint geometries differ by a single proton hop; not mirror-degenerate."
+      next_actions:
+        - "Proceed: distinct endpoints give a well-posed minimum-energy path."
+    - id: G09_geometry_origin
+      verdict: ENDPOINT_VALID
+      confidence: high
+      p_success: 0.97
+      reasons:
+        - "Both endpoints carry geometry_origin: dft_relaxed -> energy differences are comparable."
+    - id: G12_endpoint_single_sheet
+      verdict: GO
+      confidence: medium
+      p_success: 0.80
+      reasons:
+        - "Spin-restricted (NM) calculation: both endpoints lie on the same electronic sheet."
+  plan:
+    next_action: "Launch 7-image NEB from the two dft_relaxed endpoints."
+    next_action_cost_usd: 40.0
+    strategies:
+      - label: "direct_neb_7img"
+        method: "CI-NEB, 7 images, PBE+D3(BJ)"
+        expected_cost_usd: 40.0
+        p_success: 0.88
+        cvar_usd: 85.0
+        utility: 0.81
+        paper_grade_reachable: true
+      - label: "mlip_prescreen_then_neb"
+        method: "MLIP NEB prescreen, then DFT CI-NEB on survivors"
+        expected_cost_usd: 12.0
+        p_success: 0.74
+        cvar_usd: 30.0
+        utility: 0.69
+        paper_grade_reachable: true
+        proposed_workflow_ref: tm.pyr.vs.hint.mlip_prescreen.2026-06-01
+
+# -- 9. RESULTS ------------------------------------------------------------
+results:
+  endpoint_symmetry:
+    dE_AB_eV: 0.0002
+    threshold_eV: 0.005
+    pass: true
+  Ea_forward_eV: null                        # not yet computed (pre-flight stage)
+  status: PRELIMINARY
+  paper_quotable: false
+  notes: |
+    Endpoints relaxed to BFGS fmax < 0.03 eV/A each, both DFT-relaxed.
+    Pre-flight verdict GO; production NEB pending.
+
+# -- 10. SANITY GATES (post-hoc; mirror the preflight vocabulary) ----------
+sanity:
+  - { id: G01_FeS_bond,          rule: "min(Fe-S) > 2.00 A",                 observed: ">2.0 (PBE pyrite ~2.27)", pass: true }
+  - { id: G02_NM_consistent,     rule: "no spurious magmoms (pyrite NM)",     observed: "all zero",                pass: true }
+  - { id: G04_fmax_endpoints,    rule: "fmax(A,B) <= fmax_target",            observed: [0.027, 0.026],            pass: true }
+  - { id: G05_scf_converged,     rule: "all endpoint SCF OK",                 pass: true }
+  - { id: G09_endpoint_symmetry, rule: "|E_A - E_B| < 0.005 eV",              observed: 0.0002,                    pass: true }
+
+# -- 11. PROVENANCE --------------------------------------------------------
+provenance:
+  date: 2026-06-01
+  author: igor@exopoiesis.space
+  literature: [Vaughan1971]
+  compute:
+    host: ci
+    cost_usd: 0.0
+  hash:
+    inputs:  sha256:placeholder_to_be_computed
+    outputs: sha256:placeholder_to_be_computed

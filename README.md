@@ -5,7 +5,7 @@ reference toolchain for DFT/MLIP/MD calculations on atomistic systems,
 with sanity gates, provenance, NOMAD import/export, and code-agnostic
 level-of-theory.
 
-> Status: **v0.2 (draft)** · Package: **0.2.0** · License: **MIT** (code) +
+> Status: **v0.3 (draft)** · Package: **0.3.0** · License: **MIT** (code) +
 > **CC-BY-4.0** (spec) · Spec home: https://exopoiesis.github.io/tm-spec/
 
 ---
@@ -15,11 +15,12 @@ level-of-theory.
 One YAML file describes a structure, defects, magnetic state,
 environment, reaction network, DFT/MLIP calculation, workflow (NEB / US /
 MetaD / MD / MLIP benchmark / single point / relaxation), results,
-**sanity gates**, and provenance in a form that:
+**sanity gates** (post-hoc) and an optional **pre-flight** block
+(predictive), and provenance in a form that:
 
 - **Reviewers can read** in any text editor without runtime.
 - **Validators can check** against JSON Schema 2020-12
-  (`schemas/0.2.json`; legacy `0.1` documents remain supported).
+  (`schemas/0.3.json`; legacy `0.2` and `0.1` documents remain supported).
 - **Tools can ingest**: extract from existing ASE/QE/CP2K/ABACUS Python
   scripts; import public NOMAD archive entries; export TM-Spec documents
   as a NOMAD upload bundle; lint pilots vs paired scripts; auto-fill
@@ -148,6 +149,12 @@ provenance:
 | `RelaxCalculation` | `relax_protocol`, `results` | `examples/nomad_relax_example.tm.yaml` |
 | `Structure`, `Defects`, `Magnetic`, `Environment`, `Reaction`, `SanityReport`, `Provenance` | compositional fragments for JSONL streams | n/a |
 
+Optional sections (any kind):
+
+| section | What it records | Pilot |
+|---------|-----------------|-------|
+| `preflight` | predictive pre-flight assessment from an external engine, BEFORE the run (counterpart of post-hoc `sanity`); shares the gate vocabulary in [`docs/gate-registry.md`](docs/gate-registry.md) | `examples/preflight_example.tm.yaml` |
+
 ---
 
 ## Repository layout
@@ -160,10 +167,13 @@ tm-spec/
 ├── pyproject.toml
 ├── schemas/
 │   ├── 0.1.json
-│   └── 0.2.json
+│   ├── 0.2.json
+│   └── 0.3.json
 ├── docs/
 │   ├── specification/v0.1.md
 │   ├── specification/v0.2.md
+│   ├── specification/v0.3.md
+│   ├── gate-registry.md
 │   ├── design-decisions.md
 │   ├── standards-alignment.md
 │   ├── landscape.md
@@ -198,8 +208,8 @@ follows SemVer independently (`pyproject.toml`).
 | Spec | Package | Status | Highlights |
 |------|---------|--------|------------|
 | 0.1 | 0.1.0 | DRAFT | Initial 11 kinds, 6 pilots, validator/extract/lint/sanity-fill/NOMAD export |
-| 0.2 | 0.2.0 | DRAFT current | NOMAD importer, `SinglePointCalculation`, `RelaxCalculation`, import provenance |
-| 0.3 | planned | PLANNED | Recipe registry hooks and Lotsman runtime integration |
+| 0.2 | 0.2.0 | DRAFT previous | NOMAD importer, `SinglePointCalculation`, `RelaxCalculation`, import provenance |
+| 0.3 | 0.3.0 | DRAFT current | Optional `preflight` block (predictive) + `endpoint.geometry_origin` + shared gate registry |
 
 ---
 
@@ -208,7 +218,7 @@ follows SemVer independently (`pyproject.toml`).
 If TM-Spec helped your paper SI, cite:
 
 > Morozov, I. (2026). *TM-Spec: a declarative YAML metalanguage for
-> reproducible atomistic calculations.* Version 0.2.
+> reproducible atomistic calculations.* Version 0.3.
 > https://github.com/exopoiesis/tm-spec
 
 ---

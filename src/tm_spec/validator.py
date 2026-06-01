@@ -30,8 +30,8 @@ from typing import Any
 import yaml
 from jsonschema import Draft202012Validator
 
-SPEC_VERSION = "0.2"
-SUPPORTED_VERSIONS = ("0.1", "0.2")
+SPEC_VERSION = "0.3"
+SUPPORTED_VERSIONS = ("0.1", "0.2", "0.3")
 SCHEMA_FILENAME = f"{SPEC_VERSION}.json"
 
 
@@ -239,7 +239,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"FATAL: schema not found at {schema_path()}", file=sys.stderr)
         return 2
 
-    schema = load_schema()
+    # Each document is validated against the schema named by its own
+    # ``spec:`` field (see validate_doc). Spec bumps are additive, so a
+    # directory may legitimately mix versions (e.g. tm-spec/0.2 and
+    # tm-spec/0.3); do not force every doc to the current schema.
     n_pass = n_fail = n_warn = 0
 
     for path in targets:
@@ -256,7 +259,8 @@ def main(argv: list[str] | None = None) -> int:
 
         for i, doc in enumerate(docs):
             tag = path.name + (f"[{i}]" if len(docs) > 1 else "")
-            schema_errs, rule_issues = validate_doc(doc, schema)
+            # schema=None → validate_doc selects the schema from doc's spec field
+            schema_errs, rule_issues = validate_doc(doc)
 
             kind = (doc or {}).get("kind", "?") if isinstance(doc, dict) else "?"
             doc_id = (doc or {}).get("id", "?") if isinstance(doc, dict) else "?"

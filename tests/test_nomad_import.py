@@ -17,7 +17,7 @@ def _load_fixture(fixtures_dir: Path, name: str) -> dict:
     return json.loads((fixtures_dir / "nomad" / name).read_text(encoding="utf-8"))
 
 
-def test_archive_to_tm_spec_singlepoint_validates(fixtures_dir: Path, schema: dict) -> None:
+def test_archive_to_tm_spec_singlepoint_validates(fixtures_dir: Path) -> None:
     doc = archive_to_tm_spec(_load_fixture(fixtures_dir, "pyrite_singlepoint_archive.json"))
     assert doc["kind"] == "SinglePointCalculation"
     assert doc["spec"] == "tm-spec/0.2"
@@ -27,12 +27,13 @@ def test_archive_to_tm_spec_singlepoint_validates(fixtures_dir: Path, schema: di
     assert doc["results"]["energy_eV"] == -1000.0
     assert doc["results"]["band_gap_eV"] == 0.8
 
-    schema_errs, rule_issues = validate_doc(doc, schema)
+    # schema auto-selected from the doc's own spec field (importer emits 0.2).
+    schema_errs, rule_issues = validate_doc(doc)
     assert not schema_errs
     assert not [m for level, m in rule_issues if level == "error"]
 
 
-def test_archive_to_tm_spec_relax_validates(fixtures_dir: Path, schema: dict) -> None:
+def test_archive_to_tm_spec_relax_validates(fixtures_dir: Path) -> None:
     doc = archive_to_tm_spec(_load_fixture(fixtures_dir, "relax_archive.json"))
     assert doc["kind"] == "RelaxCalculation"
     assert doc["spec"] == "tm-spec/0.2"
@@ -44,7 +45,8 @@ def test_archive_to_tm_spec_relax_validates(fixtures_dir: Path, schema: dict) ->
     assert doc["results"]["final_energy_eV"] == -8.0
     assert doc["results"]["converged"] is True
 
-    schema_errs, rule_issues = validate_doc(doc, schema)
+    # schema auto-selected from the doc's own spec field (importer emits 0.2).
+    schema_errs, rule_issues = validate_doc(doc)
     assert not schema_errs
     assert not [m for level, m in rule_issues if level == "error"]
 

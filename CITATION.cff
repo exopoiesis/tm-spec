@@ -15,8 +15,8 @@ authors:
     given-names: "Igor"
     email: "igor@exopoiesis.space"
     affiliation: "Exopoiesis (independent research)"
-version: "0.2.0"
-date-released: "2026-05-10"
+version: "0.3.0"
+date-released: "2026-06-01"
 license: MIT
 license-url: "https://github.com/exopoiesis/tm-spec/blob/main/LICENSE"
 repository-code: "https://github.com/exopoiesis/tm-spec"

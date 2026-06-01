@@ -8,11 +8,46 @@ is bumped independently — see `docs/specification/`.
 
 ## [Unreleased]
 
-### Planned (v0.3)
-- Recipe registry hooks (`recipe:` block) — per Q-TMSPEC-9.
+### Planned (v0.4+)
+- Recipe registry hooks (`recipe:` block).
 - Lotsman runtime integration (`Marina.execute(yaml, host)` round-trip).
 - AiiDA bridge (`tm-spec → aiida-archive`).
 - QCSchema interop layer.
+
+## [0.3.0] — 2026-06-01
+
+Additive bump introducing a predictive pre-flight layer alongside the
+existing post-hoc sanity layer. Reference implementation tagged 0.3.0;
+spec bumped to `tm-spec/0.3`. Existing 0.1/0.2 docs remain valid — the
+validator selects schema by the doc's `spec:` field
+(`SUPPORTED_VERSIONS = ("0.1", "0.2", "0.3")`).
+
+### Specification (`spec: tm-spec/0.3`)
+- New `endpoint.geometry_origin` field (under `workflow.endpoints.<label>`):
+  `dft_relaxed | mlip_relaxed | experimental | as_built | unknown`.
+  Energy comparisons across endpoints are valid only for `dft_relaxed`;
+  an `mlip_relaxed` geometry can carry tens of eV of unrelaxed-lattice
+  error even when local bond lengths look physical.
+- New optional top-level `preflight` block — a predictive pre-flight
+  assessment produced by an external engine (reference: Prodromos) BEFORE
+  the expensive run. It is the forward-looking counterpart of the
+  post-hoc `sanity` array and shares the same gate-ID vocabulary. Carries
+  `engine`, `verdict`, `confidence`, `gates[]` (predictive gate
+  evaluations with `p_success`), and `plan` (route mode `next_action`
+  and/or tree mode scored `strategies[]` with cost / `p_success` /
+  `cvar_usd` / `utility`). Optional; not part of any kind's required set.
+- New shared gate registry at `docs/gate-registry.md` — canonical
+  vocabulary for both `sanity[]` and `preflight.gates[]`.
+
+### Reference implementation
+- Validator: `SPEC_VERSION = "0.3"`, `SUPPORTED_VERSIONS = ("0.1", "0.2",
+  "0.3")`. Schema auto-selection by `spec:` field unchanged.
+
+### Examples
+- `examples/preflight_example.tm.yaml` — NEBCalculation demonstrating
+  `endpoint.geometry_origin: dft_relaxed` and an embedded `preflight` block.
+- Existing 0.1/0.2 examples are left at their authored `spec:` versions
+  (no semantic changes; v0.3 is a strict superset).
 
 ## [0.2.0] — 2026-05-10
 
@@ -127,6 +162,7 @@ implementation tagged 0.1.0.
   with expected directory structure.
 - `tests/test_versioning.py` — `spec` field matches `schemas/` filename.
 
-[Unreleased]: https://github.com/exopoiesis/tm-spec/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/exopoiesis/tm-spec/compare/v0.3.0...HEAD
+[0.3.0]:      https://github.com/exopoiesis/tm-spec/releases/tag/v0.3.0
 [0.2.0]:      https://github.com/exopoiesis/tm-spec/releases/tag/v0.2.0
 [0.1.0]:      https://github.com/exopoiesis/tm-spec/releases/tag/v0.1.0

@@ -1,0 +1,2220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://exopoiesis.github.io/tm-spec/0.3.json",
+  "title": "TM-Spec v0.3",
+  "description": "Third Matter Specification -- meta-language for atomistic systems (structure / defects / magnetic / environment / reactions / DFT or MLIP calculation / workflow / sanity gates / provenance). v0.3 adds an endpoint.geometry_origin field and an optional top-level `preflight` block (predictive pre-flight assessment, the forward-looking counterpart of the post-hoc `sanity` array); both share the gate-ID vocabulary in docs/gate-registry.md. Existing kinds remain valid (additive bump). Aligned with NOMAD Metainfo, OPTIMADE 1.3, QCSchema, magCIF, AFLOW prototype, AiiDA provenance, Antimony 3, PHREEQC v3, pymatgen-defects, doped, MACE, CHGNet. See docs/standards-alignment.md and docs/design-decisions.md.",
+  "type": "object",
+  "required": [
+    "spec",
+    "kind",
+    "id",
+    "structure",
+    "calculation",
+    "sanity",
+    "provenance"
+  ],
+  "properties": {
+    "spec": {
+      "const": "tm-spec/0.3"
+    },
+    "kind": {
+      "$ref": "#/$defs/kind"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^tm\\.[A-Za-z0-9_.+\\-]+\\.\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "schema_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "structure": {
+      "$ref": "#/$defs/structure"
+    },
+    "defects": {
+      "$ref": "#/$defs/defects"
+    },
+    "magnetic": {
+      "$ref": "#/$defs/magnetic"
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "reactions": {
+      "$ref": "#/$defs/reactions"
+    },
+    "calculation": {
+      "$ref": "#/$defs/calculation"
+    },
+    "workflow": true,
+    "results": true,
+    "cv_definition": true,
+    "sampling": true,
+    "pmf_analysis": true,
+    "metadyn_protocol": true,
+    "fes_analysis": true,
+    "md_protocol": true,
+    "trajectory_analysis": true,
+    "benchmark_setup": true,
+    "metrics": true,
+    "relax_protocol": true,
+    "electronic_structure_analysis": true,
+    "sanity": {
+      "$ref": "#/$defs/sanity_gates"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "preflight": {
+      "$ref": "#/$defs/preflight"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "NEBCalculation"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "workflow",
+          "results"
+        ],
+        "properties": {
+          "workflow": {
+            "$ref": "#/$defs/workflow_neb"
+          },
+          "results": {
+            "$ref": "#/$defs/results_neb"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "USCalculation"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "cv_definition",
+          "sampling",
+          "pmf_analysis",
+          "results"
+        ],
+        "properties": {
+          "cv_definition": {
+            "$ref": "#/$defs/cv_definition"
+          },
+          "sampling": {
+            "$ref": "#/$defs/sampling_us"
+          },
+          "pmf_analysis": {
+            "$ref": "#/$defs/pmf_analysis"
+          },
+          "results": {
+            "$ref": "#/$defs/results_us"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "MetaDynCalculation"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "cv_definition",
+          "metadyn_protocol",
+          "fes_analysis",
+          "results"
+        ],
+        "properties": {
+          "cv_definition": {
+            "$ref": "#/$defs/cv_definition"
+          },
+          "metadyn_protocol": {
+            "$ref": "#/$defs/metadyn_protocol"
+          },
+          "fes_analysis": {
+            "$ref": "#/$defs/fes_analysis"
+          },
+          "results": {
+            "$ref": "#/$defs/results_metad"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "MDCalculation"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "md_protocol",
+          "results"
+        ],
+        "properties": {
+          "md_protocol": {
+            "$ref": "#/$defs/md_protocol"
+          },
+          "trajectory_analysis": {
+            "$ref": "#/$defs/trajectory_analysis"
+          },
+          "results": {
+            "$ref": "#/$defs/results_md"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "MLIPBenchmark"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "benchmark_setup",
+          "metrics",
+          "results"
+        ],
+        "properties": {
+          "benchmark_setup": {
+            "$ref": "#/$defs/benchmark_setup"
+          },
+          "metrics": {
+            "$ref": "#/$defs/metrics"
+          },
+          "results": {
+            "$ref": "#/$defs/results_mlip_bench"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "SinglePointCalculation"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "results"
+        ],
+        "properties": {
+          "electronic_structure_analysis": {
+            "$ref": "#/$defs/electronic_structure_analysis"
+          },
+          "results": {
+            "$ref": "#/$defs/results_singlepoint"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "RelaxCalculation"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "relax_protocol",
+          "results"
+        ],
+        "properties": {
+          "relax_protocol": {
+            "$ref": "#/$defs/relax_protocol"
+          },
+          "results": {
+            "$ref": "#/$defs/results_relax"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "SanityReport"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "sanity"
+        ],
+        "properties": {
+          "structure": false,
+          "calculation": false
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "kind": {
+      "enum": [
+        "Structure",
+        "Defects",
+        "Magnetic",
+        "Environment",
+        "Reaction",
+        "NEBCalculation",
+        "USCalculation",
+        "MetaDynCalculation",
+        "MDCalculation",
+        "MLIPBenchmark",
+        "SinglePointCalculation",
+        "RelaxCalculation",
+        "SanityReport",
+        "Provenance"
+      ],
+      "description": "Per D-18/D-21/D-22/D-23/D-24: each enhanced-sampling family is a separate kind. MDCalculation = plain MD. MLIPBenchmark = cross-method comparison. SinglePointCalculation = single SCF / electronic-structure analysis (NOMAD ecosystem dominant). RelaxCalculation = geometry optimisation."
+    },
+    "magnetic_state": {
+      "enum": [
+        "NM",
+        "FM",
+        "AFM-A",
+        "AFM-C",
+        "AFM-G",
+        "ferri",
+        "PM-itinerant"
+      ],
+      "description": "Per D-07: human-friendly shortcuts. Exact symmetry via optional bns_group."
+    },
+    "method": {
+      "enum": [
+        "DFT",
+        "DFT+U",
+        "MLIP",
+        "classical_MD",
+        "tight_binding",
+        "hybrid"
+      ]
+    },
+    "smearing_kind": {
+      "enum": [
+        "gaussian",
+        "fermi",
+        "methfessel-paxton",
+        "marzari-vanderbilt",
+        "tetrahedra"
+      ],
+      "description": "Per D-01: lowercase (NOMAD convention)."
+    },
+    "basis_kind": {
+      "enum": [
+        "plane_waves",
+        "PW",
+        "pw",
+        "gaussians",
+        "numeric_AOs",
+        "mixed",
+        "ML_potential"
+      ],
+      "description": "Per D-02: plane_waves primary (NOMAD), PW/pw aliases."
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "PRELIMINARY",
+        "FAIL",
+        "RETRACTED"
+      ],
+      "description": "Per D-13: TM-Spec richer than emmet successful/unsuccessful/error."
+    },
+    "pass_value": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "enum": [
+            "warn",
+            "skip"
+          ]
+        }
+      ],
+      "description": "Per D-15: true|false plus warn (anomaly, non-blocking) and skip (gate not applicable)."
+    },
+    "unit_bearing": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "description": "Field that may be 'value units' string (e.g. '3.687 Å') or plain number."
+    },
+    "structure": {
+      "type": "object",
+      "anyOf": [
+        {
+          "required": [
+            "formula"
+          ]
+        },
+        {
+          "required": [
+            "composition"
+          ]
+        }
+      ],
+      "properties": {
+        "formula": {
+          "type": "string"
+        },
+        "composition": {
+          "type": "object",
+          "properties": {
+            "solid": {
+              "type": "string"
+            },
+            "aqueous": {
+              "type": "string"
+            },
+            "gas": {
+              "type": "string"
+            }
+          }
+        },
+        "prototype": {
+          "type": "string",
+          "pattern": "^[A-Z](?:[0-9]+)?(?:[A-Z](?:[0-9]+)?)*_[a-zA-Z]{2,3}\\d+_\\d{1,3}_[a-zA-Z_]+(?:-\\d{3})?$",
+          "description": "AFLOW prototype label per D-04. E.g. AB_tP4_129_a_c"
+        },
+        "space_group": {
+          "type": "object",
+          "properties": {
+            "number": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 230
+            },
+            "symbol": {
+              "type": "string"
+            }
+          }
+        },
+        "cell": {
+          "type": "object"
+        },
+        "wyckoff": {
+          "type": "object"
+        },
+        "supercell": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "pbc": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "ref": {
+          "type": "string"
+        },
+        "lattice_vectors_A": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "minItems": 3,
+          "maxItems": 3,
+          "description": "Cartesian lattice vectors in Å (OPTIMADE export, D-04)."
+        },
+        "dimension_types": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "chemical_formula_descriptive": {
+          "type": "string"
+        },
+        "chemical_formula_reduced": {
+          "type": "string"
+        },
+        "chemical_formula_anonymous": {
+          "type": "string"
+        }
+      }
+    },
+    "defects": {
+      "type": "object",
+      "properties": {
+        "reactions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "charge_balance": {
+          "type": "string"
+        },
+        "population": {
+          "type": "object"
+        },
+        "objects": {
+          "type": "array",
+          "description": "Machine layer per D-06 (pymatgen-defects + doped naming).",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "kind"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^(v|[A-Z][a-z]?)_(?:[A-Z][a-z]?|i)$",
+                "description": "v_Fe (vacancy), H_i (interstitial), Cu_Zn (substitution)."
+              },
+              "kind": {
+                "enum": [
+                  "vacancy",
+                  "interstitial",
+                  "substitution",
+                  "antisite",
+                  "polaron"
+                ]
+              },
+              "site": {
+                "type": "string"
+              },
+              "charge": {
+                "type": "integer"
+              },
+              "multiplicity": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "wyckoff": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "magnetic": {
+      "type": "object",
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "$ref": "#/$defs/magnetic_state"
+        },
+        "collinear": {
+          "type": "boolean"
+        },
+        "propagation_vector": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "magmoms_uB": {
+          "type": "object"
+        },
+        "surrogate_warning": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bns_group": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional magCIF BNS magnetic space group (D-07)."
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string"
+        },
+        "T": {
+          "$ref": "#/$defs/unit_bearing"
+        },
+        "temp_C": {
+          "type": "number",
+          "description": "Computed from T for PHREEQC export (D-08)."
+        },
+        "P": {
+          "$ref": "#/$defs/unit_bearing"
+        },
+        "pH": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "redox": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "Eh": {
+                  "$ref": "#/$defs/unit_bearing"
+                },
+                "pe": {
+                  "type": "number"
+                },
+                "pe_derived": {
+                  "type": "number"
+                },
+                "note": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "composition_molal": {
+          "type": "object"
+        },
+        "explicit_water": {
+          "type": "object"
+        },
+        "database": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "saturation_targets": {
+          "type": "object"
+        }
+      }
+    },
+    "reactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "rule"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^R[\\w\\d_]*$"
+          },
+          "label": {
+            "type": "string"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object"
+          },
+          "Ea_eV": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "calculation": {
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "method": {
+          "$ref": "#/$defs/method"
+        },
+        "level": {
+          "type": "object",
+          "properties": {
+            "xc": {
+              "type": "string"
+            },
+            "vdw": {
+              "type": "string",
+              "description": "D-03: D2|D3|D3-BJ|TS|MBD|XDM"
+            },
+            "xc_libxc": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Z]+_[XC]+_[A-Z0-9]+$"
+              }
+            },
+            "basis": {
+              "type": "object"
+            },
+            "pseudopotential": {
+              "type": "string"
+            },
+            "smearing": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "$ref": "#/$defs/smearing_kind"
+                },
+                "width_Ry": {
+                  "type": "number"
+                },
+                "width_eV": {
+                  "type": "number"
+                },
+                "width_J": {
+                  "type": "number"
+                }
+              }
+            },
+            "spin": {
+              "enum": [
+                "none",
+                "collinear",
+                "non-collinear"
+              ]
+            },
+            "hubbard": {
+              "type": "object"
+            }
+          }
+        },
+        "backends": {
+          "type": "array",
+          "description": "Per D-17: for method=MLIP, list of compared backends.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "variant": {
+                "type": "string"
+              },
+              "version": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "foundation": {
+                "type": "boolean"
+              },
+              "fine_tuned": {
+                "type": "boolean"
+              },
+              "fine_tune_dataset": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "k_points": {
+          "type": "object"
+        },
+        "convergence": {
+          "type": "object"
+        },
+        "code": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "image": {
+              "type": "string"
+            },
+            "framework": {
+              "type": "string"
+            },
+            "container": {
+              "type": "string"
+            },
+            "mpirun": {
+              "type": "string"
+            },
+            "npool": {
+              "type": "integer"
+            }
+          }
+        },
+        "ensemble": {
+          "type": "string"
+        },
+        "thermostat": {
+          "type": "object"
+        },
+        "timestep_fs": {
+          "type": "number"
+        }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string"
+        },
+        "E_eV": {
+          "type": "number"
+        },
+        "fmax": {
+          "type": "number"
+        },
+        "BFGS_steps": {
+          "type": "integer"
+        },
+        "geometry_origin": {
+          "enum": [
+            "dft_relaxed",
+            "dft_static",
+            "mlip_relaxed",
+            "experimental",
+            "as_built",
+            "unknown"
+          ],
+          "description": "How this endpoint geometry was obtained (method x relaxation; a human shortcut in the spirit of magnetic.state). Maps to emmet run_type x task_type (dft_relaxed ~ '<XC> Structure Optimization', dft_static ~ '<XC> Static') and NOMAD electronic_structure_method (mlip_relaxed ~ method=ML; QCSchema expresses 'final optimized geometry' structurally via OptimizationResult.final_molecule). Distinct from the top-level 'provenance' (record authorship). Energy comparisons across endpoints are valid only for dft_relaxed; an mlip_relaxed geometry can carry tens of eV of unrelaxed-lattice error even when local bond lengths look physical (gate G09_geometry_origin in docs/gate-registry.md)."
+        }
+      }
+    },
+    "workflow_neb": {
+      "type": "object",
+      "required": [
+        "kind",
+        "endpoints"
+      ],
+      "properties": {
+        "kind": {
+          "const": "NEB"
+        },
+        "stage": {
+          "enum": [
+            "smoke",
+            "production"
+          ]
+        },
+        "endpoints": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/endpoint"
+          }
+        },
+        "n_images": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "optimizer": {
+          "type": "string"
+        },
+        "fmax_eV_per_A": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "k_spring_eV_per_A2": {
+          "type": "number"
+        },
+        "reuse_relaxed": {
+          "type": "boolean"
+        },
+        "prewrap": {
+          "type": "string"
+        },
+        "paired_script": {
+          "type": "string"
+        }
+      }
+    },
+    "cv_definition": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "examples": [
+            "smooth_min_distance",
+            "coordination_number",
+            "rmsd"
+          ]
+        },
+        "variables": {
+          "anyOf": [
+            {
+              "type": "array"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "description": "Either explicit list or symbolic description string (e.g. 'd(H_37, Fe_i) for i in 1..18')."
+        },
+        "formula": {
+          "type": "string"
+        },
+        "approximates": {
+          "type": "string"
+        },
+        "units": {
+          "type": "string"
+        },
+        "beta": {
+          "type": "number"
+        },
+        "parameters": {
+          "type": "object"
+        },
+        "atoms_from": {
+          "type": "string"
+        },
+        "atoms_to": {
+          "type": "string"
+        },
+        "initial_value": {
+          "type": "number"
+        },
+        "python_impl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "null when CV is implemented natively in the engine (e.g. CP2K COLVAR)."
+        },
+        "validated_by": {
+          "type": "string"
+        }
+      }
+    },
+    "sampling_us": {
+      "type": "object",
+      "required": [
+        "kind",
+        "windows"
+      ],
+      "properties": {
+        "kind": {
+          "const": "umbrella_sampling"
+        },
+        "windows": {
+          "type": "object",
+          "required": [
+            "n",
+            "centers_A",
+            "spring_kJ_per_mol_A2"
+          ],
+          "properties": {
+            "n": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "centers_A": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "spring_kJ_per_mol_A2": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "per_window": {
+          "type": "object"
+        },
+        "total_simulation_ps": {
+          "type": "number"
+        },
+        "walltime_total_h": {
+          "type": "object"
+        }
+      }
+    },
+    "pmf_analysis": {
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "WHAM",
+            "MBAR"
+          ]
+        },
+        "algorithm": {
+          "type": "string"
+        },
+        "iterations": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "convergence_tolerance_target": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "convergence_tolerance_achieved": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "reliability_range_A": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "edge_artifact_note": {
+          "type": "string"
+        }
+      }
+    },
+    "results_neb": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "endpoint_symmetry": {
+          "type": "object"
+        },
+        "Ea_forward_eV": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "Ea_reverse_eV": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ΔE_rxn_eV": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attempt_freq_Hz": {
+          "type": "number"
+        },
+        "rate_at_T_per_s": {
+          "type": "number"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "paper_quotable": {
+          "type": "boolean"
+        },
+        "reuse_for": {
+          "type": "string"
+        },
+        "validated_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "results_us": {
+      "type": "object",
+      "required": [
+        "PMF",
+        "status"
+      ],
+      "properties": {
+        "PMF": {
+          "type": "object"
+        },
+        "cross_validation": {
+          "type": "object"
+        },
+        "paper_bracket": {
+          "type": "object"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "paper_quotable": {
+          "type": "boolean"
+        },
+        "validated_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "conditional_DFT_US": {
+          "type": "object"
+        }
+      }
+    },
+    "metadyn_protocol": {
+      "type": "object",
+      "required": [
+        "variant",
+        "hill",
+        "bias_factor"
+      ],
+      "description": "Per D-19: well-tempered metadynamics protocol (Barducci 2008).",
+      "properties": {
+        "variant": {
+          "enum": [
+            "well_tempered",
+            "standard",
+            "tigersaw",
+            "frequency_adaptive"
+          ]
+        },
+        "hill": {
+          "type": "object",
+          "required": [
+            "height_kJ_per_mol",
+            "deposition_freq_steps"
+          ],
+          "properties": {
+            "height_kJ_per_mol": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "width_sigma": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "object"
+                }
+              ]
+            },
+            "deposition_freq_steps": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "deposition_freq_fs": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        },
+        "bias_factor": {
+          "type": "object",
+          "required": [
+            "gamma"
+          ],
+          "properties": {
+            "gamma": {
+              "type": "number",
+              "minimum": 1
+            },
+            "effective_dT_K": {
+              "type": "number"
+            },
+            "kBdT_kJ_per_mol": {
+              "type": "number"
+            }
+          }
+        },
+        "wall": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "quartic",
+                "harmonic",
+                "linear",
+                "none"
+              ]
+            },
+            "position": {
+              "type": "number"
+            },
+            "k_kJ_per_mol": {
+              "type": "number"
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "monitoring": {
+          "type": "object"
+        }
+      }
+    },
+    "fes_analysis": {
+      "type": "object",
+      "required": [
+        "method"
+      ],
+      "description": "Free Energy Surface reconstruction (analog pmf_analysis for metadyn).",
+      "properties": {
+        "method": {
+          "enum": [
+            "WT_reweighting",
+            "direct_integration",
+            "Tiwary_Parrinello",
+            "WHAM"
+          ]
+        },
+        "formula": {
+          "type": "string"
+        },
+        "grid": {
+          "type": "object",
+          "properties": {
+            "extended_post_hoc": {
+              "type": "boolean"
+            },
+            "bounds_CV": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2
+            },
+            "coverage": {
+              "type": "string"
+            },
+            "bug_1_note": {
+              "type": "string"
+            }
+          }
+        },
+        "wall_correction": {
+          "type": "object",
+          "properties": {
+            "applied": {
+              "type": "boolean"
+            },
+            "formula": {
+              "type": "string"
+            },
+            "impact_at_CV_max_kJ_per_mol": {
+              "type": "number"
+            }
+          }
+        },
+        "convergence": {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string"
+            },
+            "achieved": {
+              "type": "boolean"
+            },
+            "reason": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "results_metad": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "description": "Results for MetaDynCalculation. paper_quotable + quote_constraint per D-14 extension.",
+      "properties": {
+        "delta_F_dagger_eV": {
+          "type": "object"
+        },
+        "cross_validation_eV": {
+          "type": "object"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "paper_quotable": {
+          "type": "boolean"
+        },
+        "quote_constraint": {
+          "enum": [
+            "lower_bound_only",
+            "upper_bound_only",
+            "point_estimate",
+            "range_only"
+          ]
+        },
+        "validated_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "md_protocol": {
+      "type": "object",
+      "required": [
+        "ensemble",
+        "timestep_fs"
+      ],
+      "description": "Per D-21: plain MD (no enhanced sampling) — AIMD, classical MD, foundation-MLIP MD.",
+      "properties": {
+        "ensemble": {
+          "enum": [
+            "NVE",
+            "NVT",
+            "NPT",
+            "NVT-langevin",
+            "NVT-nose",
+            "NVT-csvr",
+            "NPT-berendsen",
+            "NPT-parrinello-rahman"
+          ]
+        },
+        "thermostat": {
+          "type": "object"
+        },
+        "barostat": {
+          "type": "object"
+        },
+        "integrator": {
+          "enum": [
+            "velocity-verlet",
+            "leapfrog",
+            "stoermer-verlet",
+            "respa"
+          ]
+        },
+        "timestep_fs": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "n_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "duration_ps": {
+          "type": "number"
+        },
+        "equilibration_ps": {
+          "type": "number"
+        },
+        "trajectory_freq": {
+          "type": "integer"
+        },
+        "constraints": {
+          "type": "object"
+        }
+      }
+    },
+    "trajectory_analysis": {
+      "type": "object",
+      "description": "Post-hoc trajectory observables for plain MD (NOT enhanced sampling).",
+      "properties": {
+        "msd": {
+          "type": "object"
+        },
+        "rdf": {
+          "type": "object"
+        },
+        "vacf": {
+          "type": "object"
+        },
+        "hbond_lifetime_ps": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        },
+        "diffusion_coefficient_cm2_per_s": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "object"
+            }
+          ]
+        },
+        "grotthuss_hops_per_ps": {
+          "type": "number"
+        },
+        "speciation_fractions": {
+          "type": "object"
+        }
+      }
+    },
+    "results_md": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "completed_ps": {
+          "type": "number"
+        },
+        "T_mean_K": {
+          "type": "number"
+        },
+        "T_drift_K_per_ps": {
+          "type": "number"
+        },
+        "energy_drift_meV_per_ps": {
+          "type": "number"
+        },
+        "metrics": {
+          "type": "object"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "paper_quotable": {
+          "type": "boolean"
+        },
+        "validated_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "benchmark_setup": {
+      "type": "object",
+      "required": [
+        "reference"
+      ],
+      "description": "Per D-22: cross-method benchmark (e.g. MACE/CHGNet vs DFT).",
+      "properties": {
+        "reference": {
+          "type": "object",
+          "required": [
+            "method"
+          ],
+          "properties": {
+            "method": {
+              "type": "string"
+            },
+            "code": {
+              "type": "string"
+            },
+            "system": {
+              "type": "string"
+            },
+            "ref": {
+              "type": "string"
+            }
+          }
+        },
+        "test_systems": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "test_observables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Cross-method comparison metrics. Each entry maps backend → value.",
+      "properties": {
+        "Ea_correlation_R2": {
+          "type": "object"
+        },
+        "Ea_RMSE_eV": {
+          "type": "object"
+        },
+        "fmax_RMSE_eV_per_A": {
+          "type": "object"
+        },
+        "energy_RMSE_meV_per_atom": {
+          "type": "object"
+        },
+        "frac_correct_basin": {
+          "type": "object"
+        },
+        "frac_correct_kind": {
+          "type": "object"
+        },
+        "abs_diff_saddle_eV": {
+          "type": "object"
+        }
+      }
+    },
+    "results_mlip_bench": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "per_backend": {
+          "type": "object"
+        },
+        "verdict": {
+          "type": "object"
+        },
+        "consistency_with_DFT": {
+          "type": "object"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "paper_quotable": {
+          "type": "boolean"
+        },
+        "validated_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "relax_protocol": {
+      "type": "object",
+      "required": [
+        "optimizer"
+      ],
+      "description": "Per D-24: geometry-optimisation protocol. Single trajectory (no NEB endpoints, no biased sampling).",
+      "properties": {
+        "optimizer": {
+          "type": "string",
+          "description": "BFGS, LBFGS, FIRE, CG, MDMin, GoodOldQuasiNewton, ASE Optimizer subclass name, or code-native (vc-relax, ions-only, …)."
+        },
+        "fmax_eV_per_A": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "energy_tol_eV": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "max_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cell_relax": {
+          "type": "boolean",
+          "description": "true → vc-relax / variable cell; false → ions-only."
+        },
+        "cell_relax_kind": {
+          "enum": [
+            "fixed",
+            "ions_only",
+            "shape",
+            "volume",
+            "all"
+          ]
+        },
+        "fixed_atoms": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "description": "Atom indices held fixed (FixAtoms). Empty/omitted = all free."
+        },
+        "constraints": {
+          "type": "object"
+        },
+        "trajectory": {
+          "type": "string",
+          "description": "Path to ASE-style .traj or extxyz trajectory artefact."
+        },
+        "paired_script": {
+          "type": "string"
+        }
+      }
+    },
+    "results_relax": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "description": "Per D-24: results for RelaxCalculation. Single endpoint (final structure + energy + max force).",
+      "properties": {
+        "final_energy_eV": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fmax_achieved_eV_per_A": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "n_steps_actual": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "converged": {
+          "type": "boolean"
+        },
+        "final_structure_ref": {
+          "type": "string",
+          "description": "Path to relaxed extxyz/CIF, e.g. relaxed.extxyz."
+        },
+        "final_volume_A3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "stress_GPa": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Final stress tensor in GPa (Voigt order: xx, yy, zz, yz, xz, xy)."
+        },
+        "magmoms_final_uB": {
+          "type": "object"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "paper_quotable": {
+          "type": "boolean"
+        },
+        "reuse_for": {
+          "type": "string"
+        },
+        "validated_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "electronic_structure_analysis": {
+      "type": "object",
+      "description": "Per D-23: optional post-SCF observables (DOS, band structure, gap, charges). All sub-objects are open-ended to accommodate code-specific outputs (VASP DOSCAR, QE bands.dat, GPAW wfcs).",
+      "properties": {
+        "dos": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "total",
+                "projected",
+                "atom_resolved",
+                "orbital_resolved"
+              ]
+            },
+            "energy_grid": {
+              "type": "string",
+              "description": "e.g. '[-10, 10] eV, 0.01 eV step'."
+            },
+            "smearing_eV": {
+              "type": "number"
+            },
+            "ref": {
+              "type": "string",
+              "description": "Path to DOSCAR / dos.dat / .npz artefact."
+            }
+          }
+        },
+        "band_structure": {
+          "type": "object",
+          "properties": {
+            "kpath": {
+              "type": "string",
+              "description": "Symmetry path label, e.g. 'Γ-X-W-K-Γ-L-U-W-L-K|U-X' or AFLOW band path."
+            },
+            "n_bands": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "ref": {
+              "type": "string"
+            }
+          }
+        },
+        "band_gap_eV": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "type": {
+              "enum": [
+                "direct",
+                "indirect",
+                "metallic",
+                "gapless_semimetal"
+              ]
+            },
+            "vbm_kpoint": {
+              "type": "string"
+            },
+            "cbm_kpoint": {
+              "type": "string"
+            }
+          }
+        },
+        "charges": {
+          "type": "object",
+          "description": "Atomic charges by partitioning scheme (Bader, Mulliken, Löwdin, Hirshfeld).",
+          "properties": {
+            "scheme": {
+              "enum": [
+                "bader",
+                "mulliken",
+                "lowdin",
+                "hirshfeld",
+                "ddec6",
+                "esp"
+              ]
+            },
+            "values": {
+              "type": "object"
+            }
+          }
+        },
+        "magmoms_uB": {
+          "type": "object",
+          "description": "Atomic magnetic moments after SCF (collinear or non-collinear projection)."
+        },
+        "fermi_energy_eV": {
+          "type": "number"
+        }
+      }
+    },
+    "results_singlepoint": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "description": "Per D-23: single-point SCF result. Energy + optional forces/stress + optional ESA results.",
+      "properties": {
+        "energy_eV": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "energy_per_atom_eV": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "forces_eV_per_A": {
+          "type": "string",
+          "description": "Path to forces artefact (per-atom array stored separately to keep YAML readable)."
+        },
+        "max_force_eV_per_A": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stress_GPa": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "scf_iterations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scf_converged": {
+          "type": "boolean"
+        },
+        "band_gap_eV": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fermi_energy_eV": {
+          "type": "number"
+        },
+        "magmoms_final_uB": {
+          "type": "object"
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "paper_quotable": {
+          "type": "boolean"
+        },
+        "reuse_for": {
+          "type": "string"
+        },
+        "validated_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "sanity_gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "rule",
+          "pass"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^G\\d{2}_[A-Za-z0-9_]+$"
+          },
+          "rule": {
+            "type": "string"
+          },
+          "observed": {},
+          "pass": {
+            "$ref": "#/$defs/pass_value"
+          },
+          "note": {
+            "type": "string"
+          },
+          "threshold": {}
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "date",
+        "author"
+      ],
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "author": {
+          "type": "string",
+          "format": "email"
+        },
+        "parents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "literature": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "import_source": {
+          "type": "object",
+          "description": "Per D-25: provenance for docs imported from external archives (NOMAD, Materials Project, AFLOW).",
+          "properties": {
+            "archive": {
+              "enum": [
+                "nomad",
+                "materials_project",
+                "aflow",
+                "oqmd",
+                "jarvis",
+                "other"
+              ]
+            },
+            "entry_id": {
+              "type": "string"
+            },
+            "upload_id": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "imported_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "importer": {
+              "type": "string",
+              "description": "e.g. tm-spec import-nomad@0.2.0"
+            },
+            "raw_keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Source archive keys consulted (audit trail)."
+            }
+          }
+        },
+        "compute": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "string"
+            },
+            "instance": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "gpu": {
+              "type": "string"
+            },
+            "cost_usd": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Per D-16: number, not string."
+            },
+            "walltime_h": {
+              "type": "number",
+              "minimum": 0
+            },
+            "sequential_total": {
+              "type": "number"
+            }
+          }
+        },
+        "hash": {
+          "type": "object",
+          "properties": {
+            "inputs": {
+              "type": "string",
+              "pattern": "^sha256:([a-f0-9]{64}|placeholder.*)$"
+            },
+            "outputs": {
+              "type": "string",
+              "pattern": "^sha256:([a-f0-9]{64}|placeholder.*)$"
+            }
+          }
+        }
+      }
+    },
+    "preflight": {
+      "type": "object",
+      "description": "Predictive pre-flight assessment produced by an external engine (e.g. Prodromos) BEFORE the expensive calculation is run. The post-hoc counterpart is the top-level `sanity` array; both use the gate-ID vocabulary in docs/gate-registry.md. Optional.",
+      "properties": {
+        "engine": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "routine": {
+              "type": "string",
+              "description": "optional, aligns to QCSchema provenance.routine"
+            }
+          }
+        },
+        "verdict": {
+          "type": "string",
+          "description": "overall pre-flight verdict, e.g. GO / NO-GO / INVESTIGATE / REVIEW"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "gates": {
+          "type": "array",
+          "description": "predictive gate evaluations; same id vocabulary as `sanity`",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "verdict"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^G\\d{2}_[A-Za-z0-9_]+$"
+              },
+              "verdict": {
+                "type": "string"
+              },
+              "confidence": {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "p_success": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "calibrated probability, lower credible bound"
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "next_actions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "plan": {
+          "type": "object",
+          "description": "recommended next step (route mode) and/or scored strategy tree (tree mode)",
+          "properties": {
+            "next_action": {
+              "type": "string"
+            },
+            "next_action_cost_usd": {
+              "type": "number"
+            },
+            "strategies": {
+              "type": "array",
+              "description": "scored leaves (tree mode); each a candidate next workflow",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  },
+                  "method": {
+                    "type": "string"
+                  },
+                  "expected_cost_usd": {
+                    "type": "number"
+                  },
+                  "p_success": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "cvar_usd": {
+                    "type": "number",
+                    "description": "conditional value-at-risk (tail) in USD"
+                  },
+                  "utility": {
+                    "type": "number"
+                  },
+                  "paper_grade_reachable": {
+                    "type": "boolean"
+                  },
+                  "proposed_workflow_ref": {
+                    "type": "string",
+                    "description": "pointer to a draft tm-spec document for this strategy"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "plan_graph_version": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
