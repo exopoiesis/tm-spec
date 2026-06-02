@@ -77,6 +77,12 @@ tm-spec import-optimade --reduced-formula FeS2 --json
 tm-spec import-mp --formula FeS2 --space-group 205 --out pyrite.tm.yaml
 tm-spec import-mp --material-id mp-226 --json
 
+# import an EXPERIMENTAL magnetic structure from MAGNDATA (Bilbao) by entry code.
+# Experimental ordering anchor for MP's computed magnetism (which can be wrong, e.g.
+# troilite/chalcopyrite). FM/AFM derived from the magCIF's own magnetic symmetry ops.
+tm-spec import-magndata --code 0.1 --out lamno3.tm.yaml
+tm-spec import-magndata --code 0.1 --mcif local_entry.mcif --json   # parse a local .mcif
+
 # merge two TM-Spec docs locally (fill-only, same-material guarded): base
 # depth (e.g. NOMAD method/results) is kept, overlay fills the holes (e.g.
 # OPTIMADE formula variants + lattice_vectors).

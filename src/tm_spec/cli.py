@@ -30,6 +30,7 @@ SUBCOMMANDS = {
     "import-optimade":       "tm_spec.importers.optimade:main",
     "import-optimade-batch": "tm_spec.importers.optimade:main_batch",
     "import-mp":             "tm_spec.importers.mp:main",
+    "import-magndata":       "tm_spec.importers.magndata:main",
     "merge":                 "tm_spec.merge:main",
 }
 

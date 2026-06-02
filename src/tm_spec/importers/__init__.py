@@ -31,8 +31,14 @@ from .mp import (
     fetch_to_tm_spec as fetch_mp_to_tm_spec,
     summary_to_tm_spec,
 )
+from .magndata import (
+    fetch_to_tm_spec as fetch_magndata_to_tm_spec,
+    magcif_to_tm_spec,
+    parse_magcif,
+)
 
 __all__ = [
     "NomadClient", "archive_to_tm_spec", "fetch_to_tm_spec",
     "MPClient", "summary_to_tm_spec", "fetch_mp_to_tm_spec",
+    "parse_magcif", "magcif_to_tm_spec", "fetch_magndata_to_tm_spec",
 ]

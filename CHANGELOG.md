@@ -22,9 +22,24 @@ is bumped independently — see `docs/specification/`.
   Pure transform (`summary_to_tm_spec`) is mockable/offline; auth via `MP_API_KEY`.
   `tm-spec import-mp --formula FeS2 [--space-group 205] | --material-id mp-226`.
 
+- New MAGNDATA importer (`import-magndata`, `tm_spec.importers.magndata`). MAGNDATA
+  (Bilbao) is the database of EXPERIMENTALLY determined magnetic structures (magCIF /
+  BNS magnetic space groups) — the experimental ordering ground-truth anchor that
+  complements MP's COMPUTED magnetism (`import-mp`), which can disagree with experiment
+  (MP labels troilite/chalcopyrite FM where neutron diffraction finds AFM). Parses a
+  magCIF onto the tm-spec `magnetic` block (`state`, `collinear`, `magmoms_uB`,
+  `propagation_vector`, `bns_group`) with `geometry_origin: experimental`. The
+  FM/AFM/ferri verdict is derived RIGOROUSLY from the magnetic symmetry operations in
+  the file itself — the net magnetisation is an axial vector, so the symmetrisation
+  projector P = (1/|G|) Σ θ·det(R)·R applied to the structure's moment gives the
+  surviving-net fraction (≈0 ⇒ AFM, ≈1 ⇒ FM, intermediate ⇒ canted/ferri); no external
+  magnetic-point-group table is hardcoded. Correctly calls a canted AFM (e.g. LaMnO3,
+  moment on the symmetry-cancelled axis) AFM rather than FM. Pure transform
+  `magcif_to_tm_spec` is offline/testable; the Bilbao server's misconfigured TLS cert
+  is handled (verification disabled for that public-data host, documented).
+  CLI: `tm-spec import-magndata --code 0.1 [--mcif local.mcif]`.
+
 ### Planned (v0.4+)
-- MAGNDATA importer (`import-magndata`) — experimental magnetic structures (magCIF,
-  BNS group) as the experimental ordering ground-truth anchor.
 - Recipe registry hooks (`recipe:` block).
 - Orchestrator runtime integration (`runtime.execute(yaml, host)` round-trip).
 - AiiDA bridge (`tm-spec → aiida-archive`).
