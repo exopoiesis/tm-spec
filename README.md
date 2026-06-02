@@ -71,6 +71,12 @@ tm-spec import-nomad <entry_id> --out imported.tm.yaml
 tm-spec import-optimade --elements Fe S --provider mp --out fes.tm.yaml
 tm-spec import-optimade --reduced-formula FeS2 --json
 
+# import the COMPUTED magnetic ground state from Materials Project (the magnetic
+# DEPTH that OPTIMADE/NOMAD lack): ordering + per-site magmoms -> magnetic block.
+# Needs a (free) MP_API_KEY env var. AFM subtype unspecified by MP -> AFM-G + warning.
+tm-spec import-mp --formula FeS2 --space-group 205 --out pyrite.tm.yaml
+tm-spec import-mp --material-id mp-226 --json
+
 # merge two TM-Spec docs locally (fill-only, same-material guarded): base
 # depth (e.g. NOMAD method/results) is kept, overlay fills the holes (e.g.
 # OPTIMADE formula variants + lattice_vectors).

@@ -8,7 +8,23 @@ is bumped independently — see `docs/specification/`.
 
 ## [Unreleased]
 
+### Reference implementation
+- New Materials Project importer (`import-mp`, `tm_spec.importers.mp`). MP carries
+  the COMPUTED magnetic ground state that OPTIMADE (structure-only) and most NOMAD
+  GGA archives lack — this is the *magnetic depth* leg that pairs with OPTIMADE
+  *width* (`import-optimade`) and NOMAD method *depth* (`import-nomad`) via
+  `tm-spec merge`. Maps MP `ordering` (NM/FM/AFM/FiM) + per-site `magmoms` onto the
+  tm-spec `magnetic` block (`state`, `collinear`, `magmoms_uB`); MP's generic AFM
+  has no A/C/G subtype → `AFM-G` + a `surrogate_warning` (and MP small-cell
+  enumeration can miss the true AFM order — the experimental anchor is MAGNDATA).
+  `structure.geometry_origin: dft_relaxed` (MP structures are VASP-relaxed); XC is
+  the MP default (GGA/GGA+U), noted in `results.notes` rather than fabricated.
+  Pure transform (`summary_to_tm_spec`) is mockable/offline; auth via `MP_API_KEY`.
+  `tm-spec import-mp --formula FeS2 [--space-group 205] | --material-id mp-226`.
+
 ### Planned (v0.4+)
+- MAGNDATA importer (`import-magndata`) — experimental magnetic structures (magCIF,
+  BNS group) as the experimental ordering ground-truth anchor.
 - Recipe registry hooks (`recipe:` block).
 - Orchestrator runtime integration (`runtime.execute(yaml, host)` round-trip).
 - AiiDA bridge (`tm-spec → aiida-archive`).

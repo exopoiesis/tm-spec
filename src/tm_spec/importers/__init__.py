@@ -1,11 +1,13 @@
 """TM-Spec importers — adapters from external archives into TM-Spec docs.
 
 Currently shipped:
-    tm_spec.importers.nomad   — NOMAD Archive (https://nomad-lab.eu)
+    tm_spec.importers.nomad     — NOMAD Archive (https://nomad-lab.eu)
+    tm_spec.importers.optimade  — OPTIMADE federation (MP/NOMAD/OQMD/...)
+    tm_spec.importers.mp        — Materials Project computed magnetism (magnetic depth)
 
 Planned:
-    tm_spec.importers.materials_project   — Materials Project entries.
     tm_spec.importers.aflow                — AFLOW prototypes.
+    tm_spec.importers.magndata             — MAGNDATA experimental magnetic structures.
 
 Each importer should expose two surfaces:
 
@@ -24,5 +26,13 @@ from .nomad import (
     archive_to_tm_spec,
     fetch_to_tm_spec,
 )
+from .mp import (
+    MPClient,
+    fetch_to_tm_spec as fetch_mp_to_tm_spec,
+    summary_to_tm_spec,
+)
 
-__all__ = ["NomadClient", "archive_to_tm_spec", "fetch_to_tm_spec"]
+__all__ = [
+    "NomadClient", "archive_to_tm_spec", "fetch_to_tm_spec",
+    "MPClient", "summary_to_tm_spec", "fetch_mp_to_tm_spec",
+]
