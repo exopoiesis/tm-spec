@@ -77,6 +77,18 @@ def _compress_formula(sum_str: str) -> str:
     return re.sub(r"\s+", "", sum_str.strip().strip("'\""))
 
 
+def _formula_from_sites(parsed: dict) -> str | None:
+    """Fallback formula from the asymmetric-unit ``_atom_site_type_symbol`` counts when
+    ``_chemical_formula_sum`` is absent. Hill-ish order; APPROXIMATE (asymmetric unit,
+    not the symmetry-expanded cell) -- enough to identify the chemistry/element set."""
+    counts = parsed.get("site_elements")
+    if not counts:
+        return None
+    def keyf(el):  # Hill: C, H first, then alphabetical
+        return (0, "") if el == "C" else (1, "") if el == "H" else (2, el)
+    return "".join(f"{el}{counts[el] if counts[el] > 1 else ''}" for el in sorted(counts, key=keyf))
+
+
 def parse_magcif(text: str) -> dict[str, Any]:
     """Parse the fields TM-Spec needs from a magCIF. Pure, offline.
 
@@ -99,6 +111,11 @@ def parse_magcif(text: str) -> dict[str, Any]:
         low = s.lower()
         if low.startswith("_chemical_formula_sum"):
             out["formula"] = _compress_formula(val(raw))
+        elif low.startswith("_parent_space_group.it_number"):
+            try:
+                out["parent_sg"] = int(re.sub(r"\D", "", val(raw)))
+            except (ValueError, TypeError):
+                pass
         elif low.startswith("_space_group_magn.number_bns"):
             out["bns_number"] = val(raw)
         elif low.startswith("_space_group_magn.name_bns"):
@@ -167,6 +184,21 @@ def _consume_loop(tags: list[str], rows: list[str], out: dict[str, Any]) -> None
                 xyz = toks[xyz_idx]
             if xyz:
                 out["symops"].append(xyz)
+        return
+    # atom sites (for a formula fallback when _chemical_formula_sum is absent):
+    # _atom_site_label / _atom_site_type_symbol / _atom_site_fract_*
+    if "_atom_site_type_symbol" in tags and not any("_moment." in t for t in tags):
+        ti = tags.index("_atom_site_type_symbol")
+        counts: dict[str, int] = {}
+        for r in rows:
+            toks = r.split()
+            if ti < len(toks):
+                el = re.sub(r"[^A-Za-z].*$", "", toks[ti])  # 'Fe2+' / 'Fe' -> 'Fe'
+                el = el[:1].upper() + el[1:].lower() if el else el
+                if el:
+                    counts[el] = counts.get(el, 0) + 1
+        if counts:
+            out["site_elements"] = counts
         return
     # atom site moments: _atom_site_moment.label / .crystalaxis_x/y/z
     if any(t.endswith("_moment.label") for t in tags):
@@ -354,7 +386,7 @@ def magcif_to_tm_spec(
     """Pure transformation: a MAGNDATA magCIF string -> TM-Spec/0.3 doc with an
     experimental ``magnetic`` block. No network."""
     parsed = parse_magcif(text)
-    formula = parsed.get("formula") or "Unknown"
+    formula = parsed.get("formula") or _formula_from_sites(parsed) or "Unknown"
     if date is None:
         date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     eid = code or "unknown"
@@ -381,6 +413,9 @@ def magcif_to_tm_spec(
         "pbc": [True, True, True],
         "geometry_origin": "experimental",  # MAGNDATA = experimentally determined
     }
+    if isinstance(parsed.get("parent_sg"), int):
+        # the crystallographic PARENT space group (matches a structural/MP sg)
+        structure["space_group"] = {"number": parsed["parent_sg"]}
 
     doc: dict[str, Any] = {
         "spec": "tm-spec/0.3",

@@ -101,6 +101,31 @@ def test_synthetic_afm_via_time_reversal():
     assert validate_doc(doc)[0] == []
 
 
+def test_formula_fallback_from_atom_sites():
+    # No _chemical_formula_sum -> derive from _atom_site_type_symbol (Co P S2 thiophosphate).
+    mcif = (
+        "data_t\n_space_group_magn.name_BNS \"P1\"\n_space_group_magn.point_group_name \"1\"\n"
+        "_cell_angle_alpha 90.0\n_cell_angle_beta 90.0\n_cell_angle_gamma 90.0\n"
+        "loop_\n_space_group_symop_magn_operation.id\n_space_group_symop_magn_operation.xyz\n1 x,y,z,+1\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n"
+        "Co1 Co 0.0 0.33 0.0\nP1 P 0.05 0.0 0.16\nS1 S 0.74 0.0 0.24\nS2 S 0.25 0.16 0.24\n"
+        "loop_\n_atom_site_moment.label\n_atom_site_moment.crystalaxis_x\n_atom_site_moment.crystalaxis_y\n"
+        "_atom_site_moment.crystalaxis_z\nCo1 2.5 0.0 0.0\n"
+    )
+    p = parse_magcif(mcif)
+    assert p.get("formula") is None  # no _chemical_formula_sum line
+    assert p["site_elements"] == {"Co": 1, "P": 1, "S": 2}
+    doc = magcif_to_tm_spec(mcif, code="t")
+    assert doc["structure"]["formula"] == "CoPS2"  # Hill-ish, asymmetric-unit
+    assert doc["structure"]["formula"] != "Unknown"
+
+
+def test_lamno3_uses_formula_sum_not_fallback():
+    # When _chemical_formula_sum IS present, it wins over the site fallback.
+    p = parse_magcif(FIX.read_text(encoding="utf-8"))
+    assert p["formula"] == "LaMnO3"
+
+
 def test_projector_rank():
     # identity-only -> projector is identity -> rank 3 (net moment free).
     P = _axial_projector(["x,y,z,+1"])
