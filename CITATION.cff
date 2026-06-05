@@ -14,9 +14,11 @@ authors:
   - family-names: "Morozov"
     given-names: "Igor"
     email: "igor@exopoiesis.space"
-    affiliation: "Exopoiesis (independent research)"
+    affiliation: "Independent Researcher, Ukraine"
+    orcid: "https://orcid.org/0009-0007-3863-1747"
 version: "0.3.0"
 date-released: "2026-06-01"
+doi: "10.5281/zenodo.20560382"
 license: MIT
 license-url: "https://github.com/exopoiesis/tm-spec/blob/main/LICENSE"
 repository-code: "https://github.com/exopoiesis/tm-spec"
