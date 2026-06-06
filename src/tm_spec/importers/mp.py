@@ -38,6 +38,7 @@ Honesty / caveats encoded in the output:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import sys
@@ -125,10 +126,8 @@ class MPClient:
                 payload = resp.read()
         except urllib.error.HTTPError as exc:
             body = ""
-            try:
+            with contextlib.suppress(Exception):
                 body = exc.read().decode("utf-8")[:300]
-            except Exception:
-                pass
             raise MPError(f"MP API GET {path} -> HTTP {exc.code}: {body}") from exc
         except urllib.error.URLError as exc:
             raise MPError(f"MP API GET {path} -> network error: {exc}") from exc

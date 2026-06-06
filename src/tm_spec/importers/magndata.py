@@ -37,6 +37,7 @@ via ``verify_tls=False`` default for this host only).
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import re
 import ssl
@@ -65,7 +66,6 @@ class MagndataError(RuntimeError):
 
 def _strip_unc(tok: str) -> float | None:
     """Parse a CIF number that may carry a parenthesised uncertainty: 5.7461(2)."""
-    m = re.match(r"^[+-]?\d*\.?\d+", tok.replace("(", " ").split()[0] if tok else "")
     try:
         return float(re.sub(r"\(.*\)", "", tok))
     except ValueError:
@@ -112,10 +112,8 @@ def parse_magcif(text: str) -> dict[str, Any]:
         if low.startswith("_chemical_formula_sum"):
             out["formula"] = _compress_formula(val(raw))
         elif low.startswith("_parent_space_group.it_number"):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 out["parent_sg"] = int(re.sub(r"\D", "", val(raw)))
-            except (ValueError, TypeError):
-                pass
         elif low.startswith("_space_group_magn.number_bns"):
             out["bns_number"] = val(raw)
         elif low.startswith("_space_group_magn.name_bns"):
@@ -157,7 +155,6 @@ def parse_magcif(text: str) -> dict[str, Any]:
 
 def _consume_loop(tags: list[str], rows: list[str], out: dict[str, Any]) -> None:
     """Dispatch a parsed loop into propagation vectors / symops / moments."""
-    tagset = set(tags)
     # propagation vectors: _parent_propagation_vector.kxkykz
     if any("propagation_vector.kxkykz" in t for t in tags):
         for r in rows:
@@ -203,13 +200,15 @@ def _consume_loop(tags: list[str], rows: list[str], out: dict[str, Any]) -> None
     # atom site moments: _atom_site_moment.label / .crystalaxis_x/y/z
     if any(t.endswith("_moment.label") for t in tags):
         idx = {t.split(".")[-1]: k for k, t in enumerate(tags)}
-        li = idx.get("label"); xi = idx.get("crystalaxis_x")
-        yi = idx.get("crystalaxis_y"); zi = idx.get("crystalaxis_z")
+        li = idx.get("label")
+        xi = idx.get("crystalaxis_x")
+        yi = idx.get("crystalaxis_y")
+        zi = idx.get("crystalaxis_z")
         for r in rows:
             toks = r.split()
             if li is None or li >= len(toks):
                 continue
-            def g(k):
+            def g(k, toks=toks):
                 v = _strip_unc(toks[k]) if (k is not None and k < len(toks)) else 0.0
                 return v if v is not None else 0.0
             out["moments"].append({"label": toks[li], "mx": g(xi), "my": g(yi), "mz": g(zi)})
@@ -469,7 +468,7 @@ def _collinear(parsed: dict) -> bool:
     n0 = math.sqrt(sum(c*c for c in v0))
     for v in vecs[1:]:
         nv = math.sqrt(sum(c*c for c in v))
-        dot = sum(a*b for a, b in zip(v0, v))
+        dot = sum(a*b for a, b in zip(v0, v, strict=False))
         if abs(abs(dot) - n0 * nv) > 1e-2 * n0 * nv:
             return False
     return True
@@ -516,6 +515,125 @@ def fetch_to_tm_spec(code: str, *, verify_tls: bool = False, date: str | None = 
 
 
 # ---------------------------------------------------------------------------
+# Search: discover entry codes by element / formula (MAGNDATA has no GET listing;
+# search.php is the only element query, via POST).
+
+MAGNDATA_SEARCH_URL = "https://www.cryst.ehu.eus/magndata/search.php"
+
+
+def _parse_search_codes(html: str) -> list[str]:
+    """Extract MAGNDATA entry codes from a search.php result page (pure, offline).
+
+    Result rows link to ``...?this_label=<code>``; we collect and sort the codes
+    numerically by their dotted components (e.g. '1.2' < '1.10' < '2.0')."""
+    codes = {m.group(1) for m in re.finditer(r"this_label=([0-9][0-9.]*)", html)}
+    return sorted(codes, key=lambda c: [int(x) for x in c.split(".") if x != ""])
+
+
+def _elements_from_formula(formula: str) -> list[str]:
+    """'LiFePO4' -> ['Fe', 'Li', 'O', 'P'] (unique element symbols, sorted)."""
+    return sorted(set(re.findall(r"[A-Z][a-z]?", formula or "")))
+
+
+def _formula_counts(formula: str) -> dict[str, int]:
+    """'Fe2S2' -> {'Fe': 2, 'S': 2}; bare element -> count 1 (ignores spaces/quotes)."""
+    counts: dict[str, int] = {}
+    for el, num in re.findall(r"([A-Z][a-z]?)(\d*)", re.sub(r"\s+", "", formula or "")):
+        if el:
+            counts[el] = counts.get(el, 0) + (int(num) if num else 1)
+    return counts
+
+
+def _reduced_key(counts: dict[str, int]) -> tuple[tuple[str, int], ...]:
+    """Reduce a composition by the gcd of its counts -> canonical comparison key
+    ('Fe2S2' and 'FeS' both -> (('Fe',1),('S',1)))."""
+    from functools import reduce
+    from math import gcd
+    vals = [v for v in counts.values() if v > 0]
+    g = reduce(gcd, vals) if vals else 1
+    g = g or 1
+    return tuple(sorted((el, c // g) for el, c in counts.items() if c > 0))
+
+
+def same_reduced_formula(a: str, b: str) -> bool:
+    """True if two formula strings reduce to the same composition (FeS == Fe2S2)."""
+    return _reduced_key(_formula_counts(a)) == _reduced_key(_formula_counts(b))
+
+
+def search_codes(elements: list[str], *, op: str = "AND", verify_tls: bool = False,
+                 timeout: float = 60.0) -> list[str]:
+    """Discover MAGNDATA entry codes whose structure contains ``elements`` (POST
+    to search.php). ``op='AND'`` requires all elements, ``'OR'`` any.
+
+    Raises ``MagndataError`` on HTTP / network failure (degrade softly upstream)."""
+    import urllib.parse
+    form = {
+        "adser": "1", "incomm_type_srch": "all", "indices_srch": "",
+        "atoms_srch": " ".join(elements), "op_srch": op,
+        "tot_species_srch": "", "auth_srch": "", "year_srch": "",
+        "comments_srch": "", "submit": "Search",
+    }
+    req = urllib.request.Request(
+        MAGNDATA_SEARCH_URL,
+        data=urllib.parse.urlencode(form).encode(),
+        headers={"User-Agent": USER_AGENT, "Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=_ssl_ctx(verify_tls)) as r:
+            html = r.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as exc:
+        raise MagndataError(f"MAGNDATA search {elements} -> HTTP {exc.code}: {exc.reason}") from exc
+    except urllib.error.URLError as exc:
+        raise MagndataError(f"MAGNDATA search {elements} -> network error: {exc}") from exc
+    return _parse_search_codes(html)
+
+
+def search_to_tm_spec(
+    *,
+    elements: list[str] | None = None,
+    formula: str | None = None,
+    op: str = "AND",
+    max_results: int = 10,
+    filter_formula: bool = True,
+    verify_tls: bool = False,
+    timeout: float = 30.0,
+    date: str | None = None,
+    author: str = "import@magndata",
+) -> list[dict[str, Any]]:
+    """Search MAGNDATA by ``elements`` or ``formula``, then fetch + convert matches.
+
+    Pass ``elements=['Fe','S']`` OR ``formula='FeS'`` (its element set drives an
+    element-AND search). When a ``formula`` is given and ``filter_formula`` is True,
+    only entries whose reduced formula matches it are returned (FeS == Fe2S2);
+    otherwise every entry containing the elements is returned. Fetches at most
+    ``max_results`` entries. Per-entry fetch errors are skipped (search is the
+    network-fragile step; a single bad .mcif must not abort the batch).
+    """
+    if elements is None and formula:
+        elements = _elements_from_formula(formula)
+    if not elements:
+        raise MagndataError("provide elements=[...] or formula=...")
+
+    codes = search_codes(elements, op=op, verify_tls=verify_tls, timeout=timeout)
+    docs: list[dict[str, Any]] = []
+    for code in codes:
+        if len(docs) >= max_results:
+            break
+        try:
+            doc = fetch_to_tm_spec(code, verify_tls=verify_tls, date=date,
+                                   author=author, timeout=timeout)
+        except MagndataError:
+            continue
+        if formula and filter_formula:
+            got = (doc.get("structure") or {}).get("formula") or ""
+            if not (got and same_reduced_formula(got, formula)):
+                continue
+        docs.append(doc)
+    return docs
+
+
+# ---------------------------------------------------------------------------
 # CLI
 
 
@@ -529,13 +647,40 @@ def main(argv: list[str] | None = None) -> int:
         prog="tm-spec import-magndata",
         description="Import a MAGNDATA experimental magnetic structure into a TM-Spec doc.",
     )
-    p.add_argument("--code", required=True, help="MAGNDATA entry code, e.g. 0.1 / 1.0.1 / 2.10")
+    src = p.add_mutually_exclusive_group(required=True)
+    src.add_argument("--code", help="MAGNDATA entry code, e.g. 0.1 / 1.0.1 / 2.10")
+    src.add_argument("--elements", nargs="+", help="search by element set, e.g. --elements Fe S")
+    src.add_argument("--formula", help="search by formula, e.g. --formula FeS (reduced-matched)")
     p.add_argument("--mcif", type=Path, default=None, help="parse a LOCAL .mcif instead of fetching")
+    p.add_argument("--op", choices=["AND", "OR"], default="AND", help="element search operator")
+    p.add_argument("--max-results", type=int, default=10, help="max entries to fetch in search mode")
     p.add_argument("--verify-tls", action="store_true", help="verify the (misconfigured) Bilbao TLS cert")
     p.add_argument("--out", "-o", type=Path, default=None)
     p.add_argument("--json", action="store_true")
     p.add_argument("--author", default="import@magndata")
     args = p.parse_args(argv)
+
+    # search mode: --elements / --formula -> list discovered codes + import them
+    if args.elements or args.formula:
+        try:
+            docs = search_to_tm_spec(
+                elements=args.elements, formula=args.formula, op=args.op,
+                max_results=args.max_results, verify_tls=args.verify_tls, author=args.author,
+            )
+        except MagndataError as exc:
+            print(f"FAIL  import-magndata search: {exc}", file=sys.stderr)
+            return 2
+        if not docs:
+            print("no MAGNDATA entries matched", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(docs, indent=2, ensure_ascii=False))
+        else:
+            for d in docs:
+                src_id = (d.get("provenance") or {}).get("import_source", {}).get("entry_id")
+                print(f"{src_id}\t{d['structure']['formula']}\t{d['magnetic']['state']}\t"
+                      f"{(d['magnetic'].get('bns_group'))}")
+        return 0
 
     try:
         if args.mcif:

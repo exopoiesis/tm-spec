@@ -11,11 +11,15 @@ from pathlib import Path
 from tm_spec import validate_doc
 from tm_spec.importers.magndata import (
     _axial_projector,
+    _elements_from_formula,
     _net_moment_ratio,
+    _parse_search_codes,
     _symop_rotation_theta,
     magcif_to_tm_spec,
     net_moment_allowed,
     parse_magcif,
+    same_reduced_formula,
+    search_to_tm_spec,
 )
 
 FIX = Path(__file__).resolve().parent / "fixtures" / "magndata_0.1_LaMnO3.mcif"
@@ -131,3 +135,53 @@ def test_projector_rank():
     P = _axial_projector(["x,y,z,+1"])
     from tm_spec.importers.magndata import _rank3
     assert _rank3(P) == 3
+
+
+# ---------------------------------------------------------------------------
+# Search by element / formula (offline: parser + reduction + mocked network)
+
+def test_parse_search_codes_sorts_numerically():
+    html = (
+        '<a href="index.php?this_label=1.10">x</a>'
+        '<a href="show.php?this_label=1.2">y</a>'
+        '<a href="?this_label=2.0">z</a>'
+        '<a href="?this_label=1.2">dup</a>'  # dedup
+    )
+    assert _parse_search_codes(html) == ["1.2", "1.10", "2.0"]
+
+
+def test_elements_from_formula():
+    assert _elements_from_formula("LiFePO4") == ["Fe", "Li", "O", "P"]
+    assert _elements_from_formula("FeS") == ["Fe", "S"]
+
+
+def test_same_reduced_formula():
+    assert same_reduced_formula("Fe2S2", "FeS") is True
+    assert same_reduced_formula("Fe S", "FeS") is True
+    assert same_reduced_formula("FeS2", "FeS") is False
+
+
+def test_search_to_tm_spec_filters_by_reduced_formula(monkeypatch):
+    import tm_spec.importers.magndata as mag
+
+    monkeypatch.setattr(mag, "search_codes", lambda elements, **kw: ["1.1", "1.2"])
+
+    def fake_fetch(code, **kw):
+        formula = "FeS" if code == "1.1" else "FeS2"  # only 1.1 is troilite-like
+        return magcif_to_tm_spec(_FM_MCIF.replace("'Fe'", f"'{formula}'"), code=code)
+
+    monkeypatch.setattr(mag, "fetch_to_tm_spec", fake_fetch)
+
+    docs = search_to_tm_spec(formula="FeS")
+    assert len(docs) == 1
+    assert docs[0]["structure"]["formula"] == "FeS"
+
+
+def test_search_to_tm_spec_no_filter_returns_all(monkeypatch):
+    import tm_spec.importers.magndata as mag
+
+    monkeypatch.setattr(mag, "search_codes", lambda elements, **kw: ["1.1", "1.2"])
+    monkeypatch.setattr(mag, "fetch_to_tm_spec",
+                        lambda code, **kw: magcif_to_tm_spec(_FM_MCIF, code=code))
+    docs = search_to_tm_spec(elements=["Fe", "S"])
+    assert len(docs) == 2

@@ -12,7 +12,6 @@ from typing import Any
 import pytest
 
 from tm_spec import validate_doc
-from tm_spec.importers import mp as mpimp
 from tm_spec.importers.mp import (
     MPClient,
     MPError,

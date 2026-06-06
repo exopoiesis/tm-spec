@@ -306,9 +306,7 @@ def _is_mlip_method(archive: dict[str, Any]) -> bool:
         return True
     # NOMAD ``electronic_structure_method`` / workflow ``method=ML``.
     esm = _g(archive, "results", "method", "method_name")
-    if isinstance(esm, str) and esm.strip().upper() == "ML":
-        return True
-    return False
+    return isinstance(esm, str) and esm.strip().upper() == "ML"
 
 
 def _geometry_origin(archive: dict[str, Any], kind: str) -> str:
